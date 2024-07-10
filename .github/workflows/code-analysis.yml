@@ -1,0 +1,34 @@
+name: Análise de Código
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  
+    branches:
+      - main
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Instala dependências
+        run: npm install
+
+      - name: Executa linter
+        run: npm run lint
+
+      - name: Executa testes e gera cobertura
+        run: npm run test:all
+
+      - name: Executa SonarCloud Scan
+        if: ${{ always() }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
