@@ -21,7 +21,7 @@ jobs:
         run: npm install
 
       - name: Executa linter
-        run: npm lint
+        run: npm run lint
 
       - name: Executa testes e gera cobertura
         run: npm test:all
