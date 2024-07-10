@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Instala dependências
-        run: npm
+        run: npm install
 
       - name: Executa linter
         run: npm lint
