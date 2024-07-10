@@ -24,7 +24,7 @@ jobs:
         run: npm run lint
 
       - name: Executa testes e gera cobertura
-        run: npm test:all
+        run: npm run test:all
 
       - name: Executa SonarCloud Scan
         if: ${{ always() }}
