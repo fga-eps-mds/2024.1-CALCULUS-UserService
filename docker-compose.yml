@@ -1,0 +1,15 @@
+services:
+  user-api:
+    container_name: user-api
+    restart: on-failure
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+    volumes:
+      - .:/src
+    env_file:
+      - .env
+    

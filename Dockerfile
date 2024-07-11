@@ -1,16 +1,15 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /src
 
-ENV PORT=8001
-
 COPY package*.json ./
+
 RUN npm install
 
 COPY . .
 
 RUN npm run build
 
-EXPOSE 8001
+EXPOSE 3000
 
-CMD ["npm", "run",]
+CMD ["npm", "run", "start:dev"]
