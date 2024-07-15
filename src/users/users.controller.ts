@@ -4,8 +4,12 @@ import {
   Post,
   Get,
   Body,
+  Delete,
   NotFoundException,
   Param,
+  UsePipes,
+  ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create_user.dto';
@@ -15,6 +19,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UsePipes(ValidationPipe)
   async createUser(@Body() createUserDto: CreateUserDto) {
     await this.usersService.createUser(createUserDto);
     return JSON.stringify({
@@ -28,14 +33,25 @@ export class UsersController {
     return users;
   }
 
-  @Get('email/:email')
-  async getUserByEmail(@Param('email') email: string) {
+  @Get('email')
+  async getUserByEmail(@Query('email') email: string) {
+    if (!email) {
+      throw new NotFoundException('Email query parameter is required');
+    }
     try {
       const user = await this.usersService.getUserByEmail(email);
       return user;
     } catch (error) {
       throw new NotFoundException(error.message);
     }
+  }
+
+  @Delete()
+  async deleteUser(@Query('email') email: string): Promise<void> {
+    if (!email) {
+      throw new NotFoundException('Email query parameter is required');
+    }
+    await this.usersService.deleteUser(email);
   }
 }
 

@@ -28,12 +28,20 @@ export class UsersService {
     return await this.userModel.find().exec();
   }
 
-  async getUserByEmail(email: string): Promise<User> {  
+  async getUserByEmail(email: string): Promise<User> {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user) {
-      throw new NotFoundException(`User with email ${email} not found`);
+      throw new NotFoundException(`User with email '${email}' not found`);
     }
     return user;
   }
+
+  async deleteUser(email: string): Promise<void> {
+    const result = await this.userModel.deleteOne({ email }).exec();
+    if (result.deletedCount === 0) {
+      throw new NotFoundException(`User with email '${email}' not found`);
+    }
+  }
+
 }
 
