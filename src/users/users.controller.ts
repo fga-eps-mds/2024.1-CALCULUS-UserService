@@ -1,4 +1,3 @@
-// users.controller.ts
 import {
   Controller,
   Post,
@@ -13,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create_user.dto';
-
+import { UsersValidationPipe } from './pipes/users_validation.pipe'
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -33,25 +32,25 @@ export class UsersController {
     return users;
   }
 
-  @Get('email')
-  async getUserByEmail(@Query('email') email: string) {
-    if (!email) {
-      throw new NotFoundException('Email query parameter is required');
-    }
+  @Get('/:_id')
+  async getUserById(@Param('_id', UsersValidationPipe) _id: string) {
     try {
-      const user = await this.usersService.getUserByEmail(email);
+      const user = await this.usersService.getUserById(_id);
       return user;
     } catch (error) {
       throw new NotFoundException(error.message);
     }
   }
 
-  @Delete()
-  async deleteUser(@Query('email') email: string): Promise<void> {
-    if (!email) {
-      throw new NotFoundException('Email query parameter is required');
+  @Delete('/:_id')
+  async deleteUserById(
+    @Param('_id', UsersValidationPipe) _id: string,
+  ): Promise<void> {
+    try {
+      await this.usersService.deleteUserById(_id);
+    } catch (error) {
+      throw new NotFoundException(error.message);
     }
-    await this.usersService.deleteUser(email);
   }
 }
 
