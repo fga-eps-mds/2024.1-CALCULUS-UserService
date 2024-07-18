@@ -10,10 +10,11 @@ import {
   ValidationPipe,
   Query,
   ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create_user.dto';
-import { UsersValidationPipe } from './pipes/users_validation.pipe'
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -24,7 +25,7 @@ export class UsersController {
     try {
       await this.usersService.createUser(createUserDto);
       return {
-        message: 'User created successfully',
+        message: 'User created successfully. Please verify your email.',
       };
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -36,6 +37,18 @@ export class UsersController {
       }
       throw error; 
     }
+  }
+
+  @Get('verify')
+  async verifyUser(@Query('token') token: string) {
+    const user = await this.usersService.verifyUser(token);
+    if (!user) {
+      throw new NotFoundException('Invalid verification token');
+    }
+
+    return {
+      message: 'Account verified successfully',
+    };
   }
 
   @Get()
@@ -69,4 +82,3 @@ export class UsersController {
     }
   }
 }
-

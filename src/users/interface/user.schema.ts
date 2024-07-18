@@ -7,7 +7,9 @@ export const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-  },
+    verificationToken: { type: String },
+    isVerified: { type: Boolean, default: false },
+},
   { timestamps: true, collection: 'users' },
 );
 
