@@ -1,6 +1,7 @@
-FROM node:22-alpine
+FROM node:18
 
 WORKDIR /src
+
 
 COPY package*.json ./
 
@@ -9,6 +10,7 @@ RUN npm install
 COPY . .
 
 RUN npm run build
+RUN npm audit fix --force
 
 EXPOSE 3000
 

@@ -11,9 +11,11 @@ import {
   Query,
   ConflictException,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create_user.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
 
 @Controller('users')
 export class UsersController {
@@ -51,12 +53,14 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getUsers() {
     const users = await this.usersService.getUsers();
     return users;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -70,6 +74,7 @@ export class UsersController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   async deleteUserById(@Param('id') id: string): Promise<void> {
     try {

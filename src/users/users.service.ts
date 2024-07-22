@@ -6,10 +6,8 @@ import {
 import { CreateUserDto } from './dtos/create_user.dto';
 import { User } from './interface/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
-import * as bcrypt from 'bcryptjs';
 import { Model } from 'mongoose';
 import { EmailService } from './email.service';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -21,45 +19,20 @@ export class UsersService {
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const { name, email, username, password } = createUserDto;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const createdUser = new this.userModel({
+      name,
+      email,
+      username,
+      password, 
+    });
 
-    try {
-      const createdUser = new this.userModel({
-        name,
-        email,
-        username,
-        password: hashedPassword,
-      });
-
-      const user = await createdUser.save();
-
-      const token = crypto.randomBytes(32).toString('hex');
-
-      user.verificationToken = token;
-      await user.save();
-
-      await this.emailService.sendVerificationEmail(user.email, token);
-
-      return user;
-    } catch (error) {
-      if (error.code === 11000) {
-        if (error.keyPattern && error.keyPattern.username) {
-          throw new ConflictException(
-            `Username '${username}' is already taken.`,
-          );
-        } else if (error.keyPattern && error.keyPattern.email) {
-          throw new ConflictException(`Email '${email}' is already taken.`);
-        } else {
-          throw new ConflictException('Duplicate field value found.');
-        }
-      } else {
-        throw error;
-      }
-    }
+    return await createdUser.save();
   }
 
   async verifyUser(token: string): Promise<User> {
-    const user = await this.userModel.findOne({ verificationToken: token }).exec();
+    const user = await this.userModel
+      .findOne({ verificationToken: token })
+      .exec();
     if (!user) {
       throw new NotFoundException('Invalid verification token');
     }
@@ -88,5 +61,13 @@ export class UsersService {
     if (result.deletedCount === 0) {
       throw new NotFoundException(`User with ID '${_id}' not found`);
     }
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).exec();
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.userModel.findById(id).exec();
   }
 }
