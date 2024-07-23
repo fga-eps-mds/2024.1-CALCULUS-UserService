@@ -3,7 +3,6 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dtos/create_user.dto';
 import { User } from './interface/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -16,8 +15,8 @@ export class UsersService {
     private readonly emailService: EmailService,
   ) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const { name, email, username, password } = createUserDto;
+  async createUser(User: User): Promise<User> {
+    const { name, email, username, password } = User;
 
     const createdUser = new this.userModel({
       name,

@@ -12,4 +12,10 @@ services:
       - .:/src
     env_file:
       - .env
+    networks:
+      - calculus-network
+
+networks:
+  calculus-network:
+    external: true
     

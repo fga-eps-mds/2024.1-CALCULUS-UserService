@@ -1,8 +1,6 @@
 import {
   Controller,
-  Post,
   Get,
-  Body,
   Delete,
   NotFoundException,
   Param,
@@ -10,26 +8,43 @@ import {
   ValidationPipe,
   Query,
   ConflictException,
-  UnauthorizedException,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dtos/create_user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
+import { Payload, Ctx, EventPattern, RmqContext } from '@nestjs/microservices';
+import { User } from './interface/user.interface';
 
-@Controller('users')
+const ackErrors: string[] = ['E11000']
+
+@Controller()
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
+
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  @UsePipes(ValidationPipe)
-  async createUser(@Body() createUserDto: CreateUserDto) {
+  @EventPattern('user-created')
+  async createUser(@Payload() user: User, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const message = context.getMessage();
+
+    this.logger.log(`User created: ${JSON.stringify(user)}`);
+    
     try {
-      await this.usersService.createUser(createUserDto);
+      await this.usersService.createUser(user);
+      await channel.ack(message);
       return {
         message: 'User created successfully. Please verify your email.',
       };
     } catch (error) {
+      this.logger.error(`Error creating user: ${error.message}`);
+
+      const filterAckError = ackErrors.filter(ackError => error.message.includes(ackError))
+
+        if (filterAckError.length > 0) {
+          await channel.ack(message)
+        }
       if (error instanceof ConflictException) {
         throw new ConflictException({
           message: error.message,
@@ -38,7 +53,8 @@ export class UsersController {
         });
       }
       throw error; 
-    }
+
+    } 
   }
 
   @Get('verify')
