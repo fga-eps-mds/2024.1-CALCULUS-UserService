@@ -4,19 +4,16 @@ import {
   Delete,
   NotFoundException,
   Param,
-  UsePipes,
-  ValidationPipe,
   Query,
-  ConflictException,
   UseGuards,
   Logger,
+  ConflictException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
 import { Payload, Ctx, EventPattern, RmqContext } from '@nestjs/microservices';
 import { User } from './interface/user.interface';
 
-const ackErrors: string[] = ['E11000']
 
 @Controller()
 export class UsersController {
@@ -28,45 +25,41 @@ export class UsersController {
   async createUser(@Payload() user: User, @Ctx() context: RmqContext) {
     const channel = context.getChannelRef();
     const message = context.getMessage();
-
-    this.logger.log(`User created: ${JSON.stringify(user)}`);
+    this.logger.log(`Data: ${JSON.stringify(user)}`);
     
     try {
       await this.usersService.createUser(user);
-      await channel.ack(message);
-      return {
-        message: 'User created successfully. Please verify your email.',
-      };
+      return {message: 'User created successfully'};
     } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`);
-
-      const filterAckError = ackErrors.filter(ackError => error.message.includes(ackError))
-
-        if (filterAckError.length > 0) {
-          await channel.ack(message)
-        }
-      if (error instanceof ConflictException) {
-        throw new ConflictException({
-          message: error.message,
-          error: 'Conflict',
-          statusCode: 409,
-        });
+      return {
+        
+        message: error.message,
       }
-      throw error; 
 
-    } 
+      throw error;
+    } finally {
+      this.logger.log('Acknowledging message');
+      await channel.ack(message);
+    }
   }
 
-  @Get('verify')
-  async verifyUser(@Query('token') token: string) {
-    const user = await this.usersService.verifyUser(token);
-    if (!user) {
-      throw new NotFoundException('Invalid verification token');
+  @EventPattern('user-verify')
+  async verifyUser(@Payload() token: string, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const message = context.getMessage();
+    
+    try{
+      const user = await this.usersService.verifyUser(token);
+      return {
+        message: 'Account verified successfully',
+      };
+    } catch (error) {
+      throw error;
+    } finally {
+      this.logger.log('Acknowledging message');
+      await channel.ack(message);
     }
-
-    return {
-      message: 'Account verified successfully',
-    };
+    
   }
 
   @UseGuards(JwtAuthGuard)
@@ -96,6 +89,8 @@ export class UsersController {
     try {
       await this.usersService.deleteUserById(id);
     } catch (error) {
+
+
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }

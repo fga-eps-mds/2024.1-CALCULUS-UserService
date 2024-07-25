@@ -2,33 +2,50 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { User } from './interface/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EmailService } from './email.service';
+import { RpcException } from '@nestjs/microservices';
+
+const ackErrors: string[] = ['E11000']
 
 @Injectable()
 export class UsersService {
+
+  private readonly logger = new Logger(UsersService.name)
+
   constructor(
     @InjectModel('User') private readonly userModel: Model<User>,
     private readonly emailService: EmailService,
   ) {}
 
-  async createUser(User: User): Promise<User> {
-    const { name, email, username, password } = User;
+  async createUser(User: User): Promise<void> {
+    try {
+      const createdUser = new this.userModel(User);
+      this.logger.log(`Created User: ${JSON.stringify(createdUser)}`)
+      await createdUser.save();
+    } catch (error) {
+      this.logger.error(`Service Error: ${JSON.stringify(error.message)}`)
+      this.logger.error(`Error: ${JSON.stringify(error)}`);
+      
+      const filterAckError = ackErrors.filter(
+        ackError => error.message.includes(ackError)
+      );
 
-    const createdUser = new this.userModel({
-      name,
-      email,
-      username,
-      password, 
-    });
-
-    return await createdUser.save();
+      if (filterAckError.length > 0) {
+        //TODO: Fix Status Code Return
+        this.logger.log(`Erroraa: ${JSON.stringify(error)}`);
+        throw new ConflictException(error);
+      }
+      throw new RpcException(error.message)
+    }
   }
 
   async verifyUser(token: string): Promise<User> {
+    //TODO: Melhorar logica, isso aq faz com que qualquer token funcione com qual usuario
     const user = await this.userModel
       .findOne({ verificationToken: token })
       .exec();
