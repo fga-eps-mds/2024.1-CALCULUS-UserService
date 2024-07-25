@@ -10,7 +10,6 @@ import { RmqContext } from '@nestjs/microservices';
   imports: [MongooseModule.forFeature([{ name: 'User', schema: UserSchema }])],
   controllers: [UsersController],
   providers: [UsersService, EmailService],
-  exports: [UsersService] 
+  exports: [UsersService],
 })
 export class UsersModule {}
-

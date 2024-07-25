@@ -15,12 +15,11 @@ export class UsersValidationPipe implements PipeTransform {
     } else if (metadata.type === 'query') {
       if (!value) {
         throw new BadRequestException(
-          `O parâmetro de consulta '${metadata.data}' é obrigatório`,)
-      
-      
+          `O parâmetro de consulta '${metadata.data}' é obrigatório`,
+        );
+      }
+
+      return value;
     }
-    
-    return value;
   }
-}
 }

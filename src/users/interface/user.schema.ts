@@ -2,14 +2,15 @@ import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './user.interface';
 
-export const UserSchema = new mongoose.Schema({
+export const UserSchema = new mongoose.Schema(
+  {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     verificationToken: { type: String },
     isVerified: { type: Boolean, default: false },
-},
+  },
   { timestamps: true, collection: 'users' },
 );
 

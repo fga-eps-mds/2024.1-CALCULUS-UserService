@@ -10,9 +10,9 @@ export class EmailService {
     this.transporter = nodemailer.createTransport(
       sgTransport({
         auth: {
-          api_key: process.env.SENDGRID_API_KEY
-        }
-      })
+          api_key: process.env.SENDGRID_API_KEY,
+        },
+      }),
     );
   }
 
