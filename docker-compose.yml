@@ -5,14 +5,17 @@ services:
     build: .
     environment:
       - NODE_ENV=development
+    ports:
+      - 3000:3000
     volumes:
-      - .:/src
+      - ./src:/app/src
+      - ./test:/app/test
     env_file:
       - .env
-    networks:
-      - calculus-network
+#     networks:
+#       - calculus-network
 
-networks:
-  calculus-network:
-    external: true
+# networks:
+#   calculus-network:
+#     external: true
     

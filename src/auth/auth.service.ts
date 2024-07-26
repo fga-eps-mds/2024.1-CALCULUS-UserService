@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
-import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -17,10 +16,7 @@ export class AuthService {
       const { password, ...result } = user.toObject();
       return result;
     }
-    throw new RpcException({
-      statusCode: 401,
-      message: 'Invalid credentials',
-    });
+    throw new UnauthorizedException('Invalid credentials');
   }
 
   async login(user: any) {

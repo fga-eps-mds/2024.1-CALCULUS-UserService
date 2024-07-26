@@ -1,21 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 
-const logger = new Logger('Main');
 const configService = new ConfigService();
+const logger = new Logger('Main');
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice(AppModule, {
-    transport: Transport.RMQ,
-    options: {
-      urls: [configService.get<string>('RABBIT_MQ_URI')],
-      queue: configService.get<string>('RABBIT_MQ_USER_QUEUE'),
-      noAck: false,
-    },
-  });
-  await app.listen();
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe());
+  await app.listen(configService.get('PORT'));
+  logger.log(`Application listening on port ${configService.get('PORT')}`);
 }
 bootstrap();
