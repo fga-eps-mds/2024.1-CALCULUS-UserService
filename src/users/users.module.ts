@@ -4,7 +4,6 @@ import { UsersService } from './users.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from './interface/user.schema';
 import { EmailService } from './email.service';
-import { RmqContext } from '@nestjs/microservices';
 
 @Module({
   imports: [MongooseModule.forFeature([{ name: 'User', schema: UserSchema }])],

@@ -13,12 +13,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
 import { CreateUserDto } from './dtos/create-user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
   @Post()
   @UsePipes(ValidationPipe)
   async createUser(@Body() createUserDto: CreateUserDto) {
@@ -28,16 +29,10 @@ export class UsersController {
         message: 'User created successfully. Please verify your email.',
       };
     } catch (error) {
-      if (error instanceof ConflictException) {
-        throw new ConflictException({
-          message: error.message,
-          error: 'Conflict',
-          statusCode: 409,
-        });
-      }
       throw error; 
     }
   }
+
   @Get('verify')
   async verifyUser(@Query('token') token: string) {
     const user = await this.usersService.verifyUser(token);
@@ -52,16 +47,14 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getUsers() {
-    const users = await this.usersService.getUsers();
-    return users;
+    return await this.usersService.getUsers();
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
-      const user = await this.usersService.getUserById(id);
-      return user;
+      return await this.usersService.getUserById(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
@@ -79,7 +72,7 @@ export class UsersController {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }
-      throw error; 
+      throw error;
     }
   }
 }
