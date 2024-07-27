@@ -11,10 +11,16 @@ import {
   Query,
   ConflictException,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { UserRole } from './dtos/user-role.enum';
+import { Roles } from 'src/auth/guards/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { User } from './interface/user.interface';
+import { UpdateRoleDto } from './dtos/update-role.dto';
 
 @Controller('users')
 export class UsersController {
@@ -44,13 +50,16 @@ export class UsersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN) 
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -63,8 +72,8 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Delete('/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN) 
   async deleteUserById(@Param('id') id: string): Promise<void> {
     try {
       await this.usersService.deleteUserById(id);
@@ -75,4 +84,29 @@ export class UsersController {
       throw error;
     }
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch('/:id/role')
+  async updateUserRole(
+    @Param('id') id: string,
+    @Body() updateRoleDto: UpdateRoleDto
+  ) {
+    try {
+      const updatedUser = await this.usersService.updateUserRole(
+        id,
+        updateRoleDto,
+      );
+      return {
+        message: 'User role updated successfully',
+        user: updatedUser
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
+
 }

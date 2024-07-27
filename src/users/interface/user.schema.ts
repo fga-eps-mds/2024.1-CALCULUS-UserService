@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User } from './user.interface';
+import { UserRole } from '../dtos/user-role.enum';
 
 export const UserSchema = new mongoose.Schema(
   {
@@ -10,6 +11,11 @@ export const UserSchema = new mongoose.Schema(
     password: { type: String, required: false  },
     verificationToken: { type: String },
     isVerified: { type: Boolean, default: false },
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.USER,
+    }, 
   },
   { timestamps: true, collection: 'users' },
 );

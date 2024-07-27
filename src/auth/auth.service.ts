@@ -19,8 +19,13 @@ export class AuthService {
     throw new UnauthorizedException('Invalid credentials');
   }
 
+
   async login(user: any) {
-    const payload = { email: user.email, sub: user._id };
+    const payload = { 
+      email: user.email, 
+      sub: user._id, 
+      role: user.role 
+    };
     const token = this.jwtService.sign(payload);
     console.log('AuthService - Generated Token:', token); 
     return {

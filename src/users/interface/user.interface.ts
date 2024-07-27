@@ -1,4 +1,5 @@
 import { Document } from 'mongoose';
+import { UserRole } from '../dtos/user-role.enum';
 
 export interface User extends Document {
   name: string;
@@ -7,4 +8,5 @@ export interface User extends Document {
   password?: string;
   verificationToken?: string;
   isVerified?: boolean;
+  role?: UserRole; 
 }

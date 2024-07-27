@@ -10,6 +10,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { MongoError } from 'mongodb'; 
+import { UserRole } from './dtos/user-role.enum';
+import { UpdateRoleDto } from './dtos/update-role.dto';
 
 @Injectable()
 export class UsersService {
@@ -19,12 +21,13 @@ export class UsersService {
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const { name, email, username, password } = createUserDto;
+    const { name, email, username, password, role } = createUserDto;
     const createdUser = new this.userModel({
       name,
       email,
       username,
       password,
+      role: role || UserRole.USER,
     });
 
     try {
@@ -88,5 +91,20 @@ export class UsersService {
 
   async findById(id: string): Promise<User | null> {
     return this.userModel.findById(id).exec();
+  }
+
+  async updateUserRole(
+    id: string,
+    updateRoleDto: UpdateRoleDto,
+  ): Promise<User> {
+    const { role } = updateRoleDto;
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID '${id}' not found`);
+    }
+
+    user.role = role;
+    await user.save();
+    return user;
   }
 }
