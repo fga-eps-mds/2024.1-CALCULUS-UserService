@@ -14,7 +14,7 @@ export const UserSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: Object.values(UserRole),
-      default: UserRole.USER,
+      default: UserRole.ALUNO,
     }, 
   },
   { timestamps: true, collection: 'users' },

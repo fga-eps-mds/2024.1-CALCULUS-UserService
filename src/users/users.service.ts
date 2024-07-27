@@ -27,7 +27,7 @@ export class UsersService {
       email,
       username,
       password,
-      role: role || UserRole.USER,
+      role: role || UserRole.ALUNO,
     });
 
     try {
