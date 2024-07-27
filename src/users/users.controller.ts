@@ -1,127 +1,112 @@
-import { Controller, Logger } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
-  Payload,
-  Ctx,
-  EventPattern,
-  RmqContext,
-  RpcException,
-} from '@nestjs/microservices';
+  Controller,
+  Post,
+  Get,
+  Body,
+  Delete,
+  NotFoundException,
+  Param,
+  UsePipes,
+  ValidationPipe,
+  Query,
+  ConflictException,
+  UseGuards,
+  Patch,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dtos/create-user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { UserRole } from './dtos/user-role.enum';
+import { Roles } from 'src/auth/guards/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { User } from './interface/user.interface';
-import { log } from 'console';
+import { UpdateRoleDto } from './dtos/update-role.dto';
 
-const ackErrors: string[] = ['E11000'];
-
-@Controller()
+@Controller('users')
 export class UsersController {
-  private readonly logger = new Logger(UsersController.name);
-
   constructor(private readonly usersService: UsersService) {}
 
-  @EventPattern('user-created')
-  async createUser(@Payload() user: User, @Ctx() context: RmqContext) {
-    this.logger.log(`Data: ${JSON.stringify(user)}`);
-    const channel = context.getChannelRef();
-    const message = context.getMessage();
-
+  @Post()
+  @UsePipes(ValidationPipe)
+  async createUser(@Body() createUserDto: CreateUserDto) {
     try {
-      await this.usersService.createUser(user);
+      await this.usersService.createUser(createUserDto);
       return {
-        message: 'User created successfully',
+        message: 'User created successfully. Please verify your email.',
       };
     } catch (error) {
-      this.logger.error(`Error: ${JSON.stringify(error)}`);
+      throw error; 
+    }
+  }
 
-      const filterAckError = ackErrors.filter((ackError) =>
-        error.message.includes(ackError),
-      );
+  @Get('verify')
+  async verifyUser(@Query('token') token: string) {
+    const user = await this.usersService.verifyUser(token);
+    if (!user) {
+      throw new NotFoundException('Invalid verification token');
+    }
+    return {
+      message: 'Account verified successfully',
+    };
+  }
 
-      if (filterAckError.length > 0) {
-        this.logger.log(`Conflict Error: ${JSON.stringify(error)}`);
-        throw new RpcException({
-          statusCode: 409,
-          message: 'User already exists',
-        });
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Get()
+  async getUsers() {
+    return await this.usersService.getUsers();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN) 
+  @Get('/:id')
+  async getUserById(@Param('id') id: string) {
+    try {
+      return await this.usersService.getUserById(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
       }
-
-      throw new RpcException({
-        statusCode: 500,
-        message: error.message,
-      });
-    } finally {
-      this.logger.log('Acknowledging message');
-      await channel.ack(message);
-    }
-  }
-
-  @EventPattern('user-verify')
-  async verifyUser(@Payload() token: string, @Ctx() context: RmqContext) {
-    const channel = context.getChannelRef();
-    const message = context.getMessage();
-    this.logger.log(`Verify: ${JSON.stringify(token)}`);
-
-    try {
-      const user = await this.usersService.verifyUser(token);
-      return {
-        message: 'Account verified successfully',
-      };
-    } catch (error) {
-      throw new RpcException({
-        statusCode: 500,
-        message: error.message,
-      });
-    } finally {
-      this.logger.log('Acknowledging message');
-      await channel.ack(message);
-    }
-  }
-
-  // @UseGuards(JwtAuthGuard)
-  @EventPattern('user-get-all')
-  async getUsers(@Payload() payload: string, @Ctx() context: RmqContext) {
-    const channel = context.getChannelRef();
-    const message = context.getMessage();
-    this.logger.log(`Get all: ${JSON.stringify(payload)}`);
-    const users = await this.usersService.getUsers();
-    await channel.ack(message);
-    return users;
-  }
-
-  //@UseGuards(JwtAuthGuard)
-  @EventPattern('user-get-by-id')
-  async getUserById(@Payload() id: string, @Ctx() context: RmqContext) {
-    const channel = context.getChannelRef();
-    const message = context.getMessage();
-    this.logger.log(`Get by id: ${JSON.stringify(id)}`);
-    try {
-      const user = await this.usersService.getUserById(id);
-      return user;
-    } catch (error) {
       throw error;
-    } finally {
-      this.logger.log('Acknowledging message');
-      await channel.ack(message);
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
-  @EventPattern('user-delete-by-id')
-  async deleteUserById(@Payload() id: string, @Ctx() context: RmqContext) {
-    const channel = context.getChannelRef();
-    const message = context.getMessage();
-    this.logger.log(`Delete by id: ${JSON.stringify(id)}`);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN) 
+  async deleteUserById(@Param('id') id: string): Promise<void> {
     try {
       await this.usersService.deleteUserById(id);
-      return {
-        message: 'User deleted successfully',
-      };
     } catch (error) {
-      this.logger.error(`Error: ${JSON.stringify(error)}`);
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
       throw error;
-    } finally {
-      this.logger.log('Acknowledging message');
-      await channel.ack(message);
     }
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch('/:id/role')
+  async updateUserRole(
+    @Param('id') id: string,
+    @Body() updateRoleDto: UpdateRoleDto
+  ) {
+    try {
+      const updatedUser = await this.usersService.updateUserRole(
+        id,
+        updateRoleDto,
+      );
+      return {
+        message: 'User role updated successfully',
+        user: updatedUser
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw error;
+    }
+  }
+
 }
