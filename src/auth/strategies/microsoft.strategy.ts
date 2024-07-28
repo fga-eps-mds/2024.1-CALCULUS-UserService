@@ -1,23 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
+import { Strategy, Profile, VerifyCallback } from 'passport-microsoft';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from '../auth.service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  private readonly logger = new Logger(GoogleStrategy.name);
+export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
+  private readonly logger = new Logger(MicrosoftStrategy.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
-      callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL'),
-      scope: ['email', 'profile'],
+      clientID: configService.get<string>('MICROSOFT_CLIENT_ID'),
+      clientSecret: configService.get<string>('MICROSOFT_CLIENT_SECRET'),
+      callbackURL: configService.get<string>('MICROSOFT_CALLBACK_URL'),
+      scope: ['user.read'],
     });
   }
 
@@ -27,7 +28,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ) {
-    this.logger.log('GoogleStrategy - Profile:', profile); // Log do profile para verificar os dados
+    this.logger.log('MicrosoftStrategy - Profile:', JSON.stringify(profile)); // Log do profile para verificar os dados
 
     const email = profile.emails[0].value;
     const name = profile.displayName;
