@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 import { UsersService } from 'src/users/users.service';
@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
+  private readonly logger = new Logger(GoogleStrategy.name);
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
@@ -26,7 +27,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ) {
-    console.log('GoogleStrategy - Profile:', profile); // Log do profile para verificar os dados
+    this.logger.log('GoogleStrategy - Profile:', profile); // Log do profile para verificar os dados
 
     const email = profile.emails[0].value;
     const name = profile.displayName;
@@ -42,9 +43,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       });
     }
 
-    const payload = { email: user.email, sub: user._id };
+    const payload = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      sub: user._id,
+      role: user.role,
+    };
     const token = this.authService.getJwtService().sign(payload);
 
-    return done(null, { ...user.toObject(), access_token: token });
+    return done(null, { ...user.toObject(), accessToken: token });
   }
 }
