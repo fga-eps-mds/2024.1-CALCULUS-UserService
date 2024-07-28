@@ -14,13 +14,15 @@ export const UserSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: Object.values(UserRole),
-      default: UserRole.USER,
+      default: UserRole.ALUNO,
+
     },
   },
   { timestamps: true, collection: 'users' },
 );
 
 UserSchema.pre<User>('save', async function (next) {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
 
   if (!user.isModified('password')) {

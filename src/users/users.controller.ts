@@ -3,13 +3,11 @@ import {
   Post,
   Get,
   Body,
-  Delete,
   NotFoundException,
   Param,
   UsePipes,
   ValidationPipe,
   Query,
-  ConflictException,
   UseGuards,
   Patch,
 } from '@nestjs/common';
@@ -19,7 +17,6 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UserRole } from './dtos/user-role.enum';
 import { Roles } from 'src/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { User } from './interface/user.interface';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 
 @Controller('users')
