@@ -1,0 +1,21 @@
+services:
+  user-api:
+    container_name: user-api
+    restart: on-failure
+    build: .
+    environment:
+      - NODE_ENV=development
+    ports:
+      - 3000:3000
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+    env_file:
+      - .env
+#     networks:
+#       - calculus-network
+
+# networks:
+#   calculus-network:
+#     external: true
+    
