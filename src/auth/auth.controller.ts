@@ -40,18 +40,15 @@ export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth() {
-
     this.logger.log(
       `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
     );
     this.logger.log('AuthController - Google Auth Initiated');
-
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-
     this.logger.log(
       `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
     );
@@ -70,7 +67,6 @@ export class AuthController {
   @Get('microsoft')
   @UseGuards(AuthGuard('microsoft'))
   async microsoftAuth() {
-
     this.logger.log(
       `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
     );
@@ -86,7 +82,7 @@ export class AuthController {
     );
 
     const user = req.user as any;
-    const { access_token } = user || {}; 
+    const { access_token } = user || {};
 
     if (access_token) {
       res.redirect(
