@@ -13,21 +13,21 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(password, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user.toObject();
       return result;
     }
     throw new UnauthorizedException('Invalid credentials');
   }
 
-
   async login(user: any) {
-    const payload = { 
-      email: user.email, 
-      sub: user._id, 
-      role: user.role 
+    const payload = {
+      email: user.email,
+      sub: user._id,
+      role: user.role,
     };
     const token = this.jwtService.sign(payload);
-    console.log('AuthService - Generated Token:', token); 
+    console.log('AuthService - Generated Token:', token);
     return {
       access_token: token,
     };

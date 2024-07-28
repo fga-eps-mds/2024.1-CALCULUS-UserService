@@ -9,7 +9,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { MongoError } from 'mongodb'; 
+import { MongoError } from 'mongodb';
 import { UserRole } from './dtos/user-role.enum';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 
@@ -48,7 +48,7 @@ export class UsersService {
     if (!createUserGoogleDto.password) {
       delete createUserGoogleDto.password;
     }
-    
+
     const createdUser = new this.userModel(createUserGoogleDto);
     return createdUser.save();
   }
