@@ -70,19 +70,27 @@ export class AuthController {
   @Get('microsoft')
   @UseGuards(AuthGuard('microsoft'))
   async microsoftAuth() {
-    console.log('AuthController - Microsoft Auth Initiated');
+
+    this.logger.log(
+      `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
+    );
+    this.logger.log('AuthController - Microsoft Auth Initiated');
   }
 
   @Get('microsoft/callback')
   @UseGuards(AuthGuard('microsoft'))
   microsoftAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    console.log('AuthController - Microsoft Callback Request:', req.user);
-    const user = req.user as any;
-    const { accessToken } = user || {};
+    this.logger.log(
+      'AuthController - Microsoft Callback Request:',
+      JSON.stringify(req.user),
+    );
 
-    if (accessToken) {
+    const user = req.user as any;
+    const { access_token } = user || {}; 
+
+    if (access_token) {
       res.redirect(
-        `${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}`,
+        `${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${access_token}`,
       );
     } else {
       res.redirect(

@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile, VerifyCallback } from 'passport-microsoft';
+import { UsersService } from 'src/users/users.service';
 import { AuthService } from '../auth.service';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
+  private readonly logger = new Logger(MicrosoftStrategy.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
@@ -26,7 +28,7 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
     profile: Profile,
     done: VerifyCallback,
   ) {
-    console.log('MicrosoftStrategy - Profile:', profile);
+    this.logger.log('MicrosoftStrategy - Profile:', JSON.stringify(profile)); // Log do profile para verificar os dados
 
     const email = profile.emails[0].value;
     const name = profile.displayName;
@@ -38,13 +40,19 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
         name,
         email,
         username: email,
-        password: '', 
+        password: '',
       });
     }
 
-    const payload = { email: user.email, sub: user._id };
+    const payload = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      sub: user._id,
+      role: user.role,
+    };
     const token = this.authService.getJwtService().sign(payload);
 
-    return done(null, { ...user.toObject(), access_token: token });
+    return done(null, { ...user.toObject(), accessToken: token });
   }
 }
