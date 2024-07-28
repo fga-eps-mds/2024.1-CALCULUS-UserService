@@ -3,7 +3,6 @@ import { UsersService } from 'src/users/users.service';
 import { UsersController } from 'src/users/users.controller';
 import { UserRole } from 'src/users/dtos/user-role.enum';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
-import { UpdateRoleDto } from 'src/users/dtos/update-role.dto';
 import {
   NotFoundException,
   InternalServerErrorException,
@@ -185,7 +184,6 @@ describe('UsersController', () => {
   });
 
   describe('updateUserRole', () => {
-
     it('should throw NotFoundException if user not found', async () => {
       jest
         .spyOn(usersService, 'updateUserRole')
