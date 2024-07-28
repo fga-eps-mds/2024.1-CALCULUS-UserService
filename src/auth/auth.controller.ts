@@ -49,4 +49,24 @@ export class AuthController {
       res.redirect('http://localhost:3000/login');
     }
   }
+
+  @Get('microsoft')
+  @UseGuards(AuthGuard('microsoft'))
+  async microsoftAuth() {
+    console.log('AuthController - Microsoft Auth Initiated');
+  }
+
+  @Get('microsoft/callback')
+  @UseGuards(AuthGuard('microsoft'))
+  microsoftAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    console.log('AuthController - Microsoft Callback Request:', req.user);
+    const user = req.user as any;
+    const { access_token } = user || {};
+
+    if (access_token) {
+      res.redirect(`http://localhost:3000?token=${access_token}`);
+    } else {
+      res.redirect('http://localhost:3000/login');
+    }
+  }
 }
