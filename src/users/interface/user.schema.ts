@@ -8,14 +8,14 @@ export const UserSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true },
-    password: { type: String, required: false  },
+    password: { type: String, required: false },
     verificationToken: { type: String },
     isVerified: { type: Boolean, default: false },
     role: {
       type: String,
       enum: Object.values(UserRole),
       default: UserRole.USER,
-    }, 
+    },
   },
   { timestamps: true, collection: 'users' },
 );

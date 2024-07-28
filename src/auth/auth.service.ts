@@ -1,10 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -19,17 +20,21 @@ export class AuthService {
     throw new UnauthorizedException('Invalid credentials');
   }
 
-
   async login(user: any) {
-    const payload = { 
-      email: user.email, 
-      sub: user._id, 
-      role: user.role 
+    const payload = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      sub: user._id,
+      role: user.role,
     };
     const token = this.jwtService.sign(payload);
-    console.log('AuthService - Generated Token:', token); 
+    this.logger.log('AuthService - Generated Token:', token);
     return {
-      access_token: token,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      accessToken: token,
     };
   }
 

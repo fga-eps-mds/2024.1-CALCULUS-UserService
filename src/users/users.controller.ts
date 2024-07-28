@@ -35,7 +35,7 @@ export class UsersController {
         message: 'User created successfully. Please verify your email.',
       };
     } catch (error) {
-      throw error; 
+      throw error;
     }
   }
 
@@ -50,7 +50,6 @@ export class UsersController {
     };
   }
 
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get()
@@ -59,7 +58,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN) 
+  @Roles(UserRole.ADMIN)
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -73,7 +72,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN) 
+  @Roles(UserRole.ADMIN)
   async deleteUserById(@Param('id') id: string): Promise<void> {
     try {
       await this.usersService.deleteUserById(id);
@@ -90,7 +89,7 @@ export class UsersController {
   @Patch('/:id/role')
   async updateUserRole(
     @Param('id') id: string,
-    @Body() updateRoleDto: UpdateRoleDto
+    @Body() updateRoleDto: UpdateRoleDto,
   ) {
     try {
       const updatedUser = await this.usersService.updateUserRole(
@@ -99,7 +98,7 @@ export class UsersController {
       );
       return {
         message: 'User role updated successfully',
-        user: updatedUser
+        user: updatedUser,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -108,5 +107,4 @@ export class UsersController {
       throw error;
     }
   }
-
 }
