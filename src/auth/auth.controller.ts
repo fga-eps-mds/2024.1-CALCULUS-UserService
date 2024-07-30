@@ -60,7 +60,7 @@ export class AuthController {
     if (accessToken) {
       res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}`);
     } else {
-      res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/login`);
+      res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/cadastro`);
     }
   }
 
