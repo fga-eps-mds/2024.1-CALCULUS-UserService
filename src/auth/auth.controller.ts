@@ -55,12 +55,12 @@ export class AuthController {
     this.logger.log('AuthController - Google Callback Request:', req.user);
 
     const user = req.user as any;
-    const { access_token } = user || {};
+    const { accessToken } = user || {};
 
-    if (access_token) {
-      res.redirect(`http://localhost:3000?token=${access_token}`);
+    if (accessToken) {
+      res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}`);
     } else {
-      res.redirect('http://localhost:3000/login');
+      res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/login`);
     }
   }
 
@@ -82,11 +82,11 @@ export class AuthController {
     );
 
     const user = req.user as any;
-    const { access_token } = user || {};
+    const { accessToken } = user || {};
 
-    if (access_token) {
+    if (accessToken) {
       res.redirect(
-        `${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${access_token}`,
+        `${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}`,
       );
     } else {
       res.redirect(
