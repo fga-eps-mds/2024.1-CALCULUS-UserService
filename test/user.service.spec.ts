@@ -8,6 +8,17 @@ import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateUserDtoGoogle } from 'src/users/dtos/create-user-google.dto';
 
 interface MockUserModel {
+  mockReturnValue(createdUser: {
+    save: jest.Mock<any, any, any>;
+    name: string;
+    email: string;
+    username: string;
+    password: string;
+    role?: UserRole;
+    _id: string;
+  }): unknown;
+
+  mockImplementation(arg0: () => never): unknown;
   save: jest.Mock;
   find: jest.Mock;
   findById: jest.Mock;
@@ -70,6 +81,36 @@ describe('UsersService', () => {
     });
   });
 
+  describe('verifyUser', () => {
+    it('should verify a user and update the verification status', async () => {
+      const token = 'valid-token';
+      const user = {
+        _id: 'some-id',
+        verificationToken: token,
+        isVerified: false,
+        save: jest.fn(),
+      };
+      userModel.findOne.mockReturnValue(userModel); // chainable
+      userModel.exec.mockResolvedValue(user);
+
+      const result = await usersService.verifyUser(token);
+
+      expect(result).toEqual(user);
+      expect(user.verificationToken).toBeUndefined();
+      expect(user.isVerified).toBe(true);
+      expect(user.save).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if token is invalid', async () => {
+      userModel.findOne.mockReturnValue(userModel);
+      userModel.exec.mockResolvedValue(null);
+
+      await expect(usersService.verifyUser('invalid-token')).rejects.toThrow(
+        new NotFoundException('Invalid verification token'),
+      );
+    });
+  });
+
   describe('createUserGoogle', () => {
     it('should throw ConflictException if user already exists', async () => {
       const createUserGoogleDto: CreateUserDtoGoogle = {
@@ -128,6 +169,33 @@ describe('UsersService', () => {
       userModel.exec.mockResolvedValue(null);
 
       await expect(usersService.getUserById('invalid-id')).rejects.toThrow(
+        new NotFoundException(`User with ID 'invalid-id' not found`),
+      );
+    });
+  });
+
+  describe('updateUserRole', () => {
+    it("should update a user's role", async () => {
+      const userId = 'some-id';
+      const updateRoleDto = { role: UserRole.ADMIN };
+      const user = { _id: userId, role: UserRole.ALUNO, save: jest.fn() };
+      userModel.findById.mockReturnValue(userModel); // chainable
+      userModel.exec.mockResolvedValue(user);
+
+      const result = await usersService.updateUserRole(userId, updateRoleDto);
+
+      expect(result).toEqual(user);
+      expect(user.role).toBe(updateRoleDto.role);
+      expect(user.save).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if user not found', async () => {
+      userModel.findById.mockReturnValue(userModel); // chainable
+      userModel.exec.mockResolvedValue(null);
+
+      await expect(
+        usersService.updateUserRole('invalid-id', { role: UserRole.ADMIN }),
+      ).rejects.toThrow(
         new NotFoundException(`User with ID 'invalid-id' not found`),
       );
     });
