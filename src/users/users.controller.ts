@@ -47,15 +47,15 @@ export class UsersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  //@UseGuards(JwtAuthGuard, RolesGuard)
+  //@Roles(UserRole.ADMIN)
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  //@UseGuards(JwtAuthGuard, RolesGuard)
+  //@Roles(UserRole.ADMIN)
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -81,8 +81,8 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  //@UseGuards(JwtAuthGuard, RolesGuard)
+  //@Roles(UserRole.ADMIN)
   @Patch('/:id/role')
   async updateUserRole(
     @Param('id') id: string,
