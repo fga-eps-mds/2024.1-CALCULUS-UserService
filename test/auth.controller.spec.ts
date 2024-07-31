@@ -103,7 +103,9 @@ describe('AuthController', () => {
         'AuthController - Google Callback Request:',
         req.user,
       );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/login`);
+      expect(res.redirect).toHaveBeenCalledWith(
+        `${frontendUrl}/oauth?token=token`,
+      );
     });
 
     it('should redirect to registration URL if accessToken is not present', () => {
@@ -120,7 +122,7 @@ describe('AuthController', () => {
         'AuthController - Google Callback Request:',
         req.user,
       );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/login`);
+      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/cadastro`);
     });
   });
 
@@ -153,7 +155,7 @@ describe('AuthController', () => {
         'AuthController - Microsoft Callback Request:',
         JSON.stringify(req.user),
       );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/cadastro`);
+      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/oauth?token=token`);
     });
 
     it('should redirect to registration URL if accessToken is not present', () => {
