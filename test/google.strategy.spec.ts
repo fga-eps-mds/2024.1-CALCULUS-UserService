@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/users/users.service';
 import { Profile, VerifyCallback } from 'passport-google-oauth20';
-import { JwtService } from '@nestjs/jwt';
 import { GoogleStrategy } from 'src/auth/strategies/google.strategy';
 import { AuthService } from 'src/auth/auth.service';
 
@@ -10,6 +9,7 @@ describe('GoogleStrategy', () => {
   let googleStrategy: GoogleStrategy;
   let usersService: UsersService;
   let authService: AuthService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let configService: ConfigService;
 
   beforeEach(async () => {

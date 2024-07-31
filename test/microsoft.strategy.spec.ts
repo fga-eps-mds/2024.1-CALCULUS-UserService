@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/users/users.service';
 import { Profile, VerifyCallback } from 'passport-microsoft';
-import { JwtService } from '@nestjs/jwt';
 import { MicrosoftStrategy } from 'src/auth/strategies/microsoft.strategy';
 import { AuthService } from 'src/auth/auth.service';
 
