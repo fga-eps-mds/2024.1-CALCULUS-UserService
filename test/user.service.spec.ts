@@ -6,7 +6,6 @@ import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { UserRole } from 'src/users/dtos/user-role.enum';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateUserDtoGoogle } from 'src/users/dtos/create-user-google.dto';
-import { MongoError } from 'mongodb';
 
 interface MockUserModel {
   mockReturnValue(createdUser: {
@@ -18,7 +17,7 @@ interface MockUserModel {
     role?: UserRole;
     _id: string;
   }): unknown;
-  
+
   mockImplementation(arg0: () => never): unknown;
   save: jest.Mock;
   find: jest.Mock;
@@ -82,7 +81,6 @@ describe('UsersService', () => {
     });
   });
 
-
   describe('verifyUser', () => {
     it('should verify a user and update the verification status', async () => {
       const token = 'valid-token';
@@ -94,19 +92,19 @@ describe('UsersService', () => {
       };
       userModel.findOne.mockReturnValue(userModel); // chainable
       userModel.exec.mockResolvedValue(user);
-  
+
       const result = await usersService.verifyUser(token);
-  
+
       expect(result).toEqual(user);
       expect(user.verificationToken).toBeUndefined();
       expect(user.isVerified).toBe(true);
       expect(user.save).toHaveBeenCalled();
     });
-  
+
     it('should throw NotFoundException if token is invalid', async () => {
-      userModel.findOne.mockReturnValue(userModel); 
+      userModel.findOne.mockReturnValue(userModel);
       userModel.exec.mockResolvedValue(null);
-  
+
       await expect(usersService.verifyUser('invalid-token')).rejects.toThrow(
         new NotFoundException('Invalid verification token'),
       );
@@ -128,7 +126,7 @@ describe('UsersService', () => {
       );
     });
   });
-  
+
   describe('verifyUser', () => {
     it('should throw NotFoundException if token is invalid', async () => {
       userModel.findOne.mockReturnValue(userModel); // chainable
@@ -183,18 +181,18 @@ describe('UsersService', () => {
       const user = { _id: userId, role: UserRole.ALUNO, save: jest.fn() };
       userModel.findById.mockReturnValue(userModel); // chainable
       userModel.exec.mockResolvedValue(user);
-  
+
       const result = await usersService.updateUserRole(userId, updateRoleDto);
-  
+
       expect(result).toEqual(user);
       expect(user.role).toBe(updateRoleDto.role);
       expect(user.save).toHaveBeenCalled();
     });
-  
+
     it('should throw NotFoundException if user not found', async () => {
       userModel.findById.mockReturnValue(userModel); // chainable
       userModel.exec.mockResolvedValue(null);
-  
+
       await expect(
         usersService.updateUserRole('invalid-id', { role: UserRole.ADMIN }),
       ).rejects.toThrow(
@@ -202,7 +200,6 @@ describe('UsersService', () => {
       );
     });
   });
-  
 
   describe('deleteUserById', () => {
     it('should delete a user by id', async () => {

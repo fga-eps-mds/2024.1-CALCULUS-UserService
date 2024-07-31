@@ -9,7 +9,6 @@ describe('AuthService', () => {
   let usersService: UsersService;
   let jwtService: JwtService;
 
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
