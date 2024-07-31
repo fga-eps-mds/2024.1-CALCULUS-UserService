@@ -1,5 +1,7 @@
 import type { Config } from 'jest';
+import * as dotenv from 'dotenv';
 
+dotenv.config(); 
 const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
@@ -16,6 +18,7 @@ const config: Config = {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
   },
+  setupFiles: ['dotenv/config'], 
 };
 
 export default config;
