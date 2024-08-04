@@ -31,7 +31,9 @@ export class UsersService {
     });
 
     try {
-      return await createdUser.save();
+      const user = await createdUser.save();
+      await this.emailService.sendVerificationEmail(email);
+      return user;
     } catch (error) {
       if (error instanceof MongoError && error.code === 11000) {
         throw new ConflictException(
