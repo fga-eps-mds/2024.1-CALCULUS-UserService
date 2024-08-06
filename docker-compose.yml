@@ -12,10 +12,5 @@ services:
       - ./test:/app/test
     env_file:
       - .env
-#     networks:
-#       - calculus-network
-
-# networks:
-#   calculus-network:
-#     external: true
-    
+    networks:
+      - calculus-network
