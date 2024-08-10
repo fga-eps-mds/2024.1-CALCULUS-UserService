@@ -24,9 +24,7 @@ import { ResetPasswordDto } from 'src/users/dtos/reset-password.dto';
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
@@ -52,7 +50,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
     this.logger.log('AuthController - Google Callback Request:', req.user);
-    this.authService.redirectFederated(req.user as any, res)
+    this.authService.redirectFederated(req.user as any, res);
   }
 
   @Get('microsoft')
@@ -68,7 +66,7 @@ export class AuthController {
       'AuthController - Microsoft Callback Request:',
       JSON.stringify(req.user),
     );
-    this.authService.redirectFederated(req.user as any, res)
+    this.authService.redirectFederated(req.user as any, res);
   }
 
   @Post('refresh')

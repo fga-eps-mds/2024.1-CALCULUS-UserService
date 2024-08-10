@@ -29,10 +29,14 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
     done: VerifyCallback,
   ) {
     this.logger.log('MicrosoftStrategy - Profile:', JSON.stringify(profile));
-    const {user, token} = await this.authService.loginFederated({
+    const { user, token } = await this.authService.loginFederated({
       email: profile.emails[0].value,
-      name: profile.displayName
+      name: profile.displayName,
     });
-    return done(null, { ...user.toObject(), accessToken: token.accessToken, refreshToken: token.refreshToken });
+    return done(null, {
+      ...user.toObject(),
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken,
+    });
   }
 }

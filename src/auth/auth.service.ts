@@ -19,7 +19,6 @@ import { ResetToken } from 'src/users/interface/reset-token.schema';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -33,7 +32,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
-
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -50,14 +48,12 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const tokens = await this.generateTokens(
-      {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }
-    );
+    const tokens = await this.generateTokens({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
     return {
       id: user._id,
       name: user.name,
@@ -66,10 +62,7 @@ export class AuthService {
     };
   }
 
-  async loginFederated({
-    email,
-    name,
-  }: { email: string; name: string }) {
+  async loginFederated({ email, name }: { email: string; name: string }) {
     let user = await this.usersService.findByEmail(email);
 
     if (!user) {
@@ -90,7 +83,7 @@ export class AuthService {
     return { user, token };
   }
 
-  async generateTokens({id, name, email, role}) {
+  async generateTokens({ id, name, email, role }) {
     const payload = {
       id: id,
       name: name,
@@ -118,7 +111,7 @@ export class AuthService {
     await this.RefreshTokenModel.updateOne(
       { userId },
       { $set: { expiryDate, token } },
-      { upsert: true, },
+      { upsert: true },
     );
   }
 
@@ -156,7 +149,7 @@ export class AuthService {
     await user.save();
   }
 
-  redirectFederated(user: any, res: Response) {;
+  redirectFederated(user: any, res: Response) {
     this.logger.log('redirectFederated', user);
     const { accessToken, refreshToken } = user || {};
 

@@ -28,10 +28,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ) {
     this.logger.log('GoogleStrategy - Profile:', profile);
-    const {user, token} = await this.authService.loginFederated({
+    const { user, token } = await this.authService.loginFederated({
       email: profile.emails[0].value,
-      name: profile.displayName
+      name: profile.displayName,
     });
-    return done(null, { ...user.toObject(), accessToken: token.accessToken, refreshToken: token.refreshToken });
+    return done(null, {
+      ...user.toObject(),
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken,
+    });
   }
 }
