@@ -8,6 +8,7 @@ import {
   Req,
   Res,
   Logger,
+  Put,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from 'src/users/dtos/login.dto';
@@ -15,6 +16,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RefreshTokenDto } from 'src/users/dtos/refresh-tokens.dto';
+import { ChangePasswordDto } from 'src/users/dtos/change-password.dto';
+import { JwtAuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -101,4 +104,16 @@ export class AuthController {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Put('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req,
+  ) {
+    return this.authService.changePassword(
+      req.userId,
+      changePasswordDto.oldPassword,
+      changePasswordDto.newPassword,
+    );
+  }
 }
