@@ -10,6 +10,8 @@ import { MicrosoftStrategy } from './strategies/microsoft.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema } from 'src/users/interface/user.schema';
 import { RefreshTokenSchema } from 'src/users/interface/refresh-token.schema';
+import { ResetTokenSchema } from 'src/users/interface/reset-token.schema';
+import { EmailService } from 'src/users/email.service';
 
 @Module({
   imports: [
@@ -24,9 +26,17 @@ import { RefreshTokenSchema } from 'src/users/interface/refresh-token.schema';
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
       { name: 'RefreshToken', schema: RefreshTokenSchema }, 
+      { name: 'ResetToken', schema: ResetTokenSchema }, 
+
     ]),
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, MicrosoftStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    MicrosoftStrategy,
+    EmailService,
+  ],
   controllers: [AuthController],
   exports: [JwtStrategy, PassportModule, AuthService],
 })

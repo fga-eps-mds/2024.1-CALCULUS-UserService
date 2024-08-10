@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -68,8 +69,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Delete('/:id')
   async deleteUserById(@Param('id') id: string): Promise<void> {
     try {
       await this.usersService.deleteUserById(id);

@@ -18,6 +18,8 @@ import { ConfigService } from '@nestjs/config';
 import { RefreshTokenDto } from 'src/users/dtos/refresh-tokens.dto';
 import { ChangePasswordDto } from 'src/users/dtos/change-password.dto';
 import { JwtAuthGuard } from './guards/auth.guard';
+import { ForgotPasswordDto } from 'src/users/dtos/forgot-password.dto';
+import { ResetPasswordDto } from 'src/users/dtos/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -115,5 +117,24 @@ export class AuthController {
       changePasswordDto.oldPassword,
       changePasswordDto.newPassword,
     );
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  @Put('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    if (resetPasswordDto.newPassword !== resetPasswordDto.confirmPassword) {
+      throw new UnauthorizedException('Passwords are not the same');
+    }
+
+    await this.authService.resetPassword(
+      resetPasswordDto.newPassword,
+      resetPasswordDto.resetToken,
+    );
+
+    return { message: 'Password reset successful' };
   }
 }
