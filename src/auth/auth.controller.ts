@@ -14,6 +14,7 @@ import { LoginDto } from 'src/users/dtos/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { RefreshTokenDto } from 'src/users/dtos/refresh-tokens.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -94,4 +95,10 @@ export class AuthController {
       );
     }
   }
+
+  @Post('refresh')
+  async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshTokens(refreshTokenDto.refreshToken);
+  }
+
 }
