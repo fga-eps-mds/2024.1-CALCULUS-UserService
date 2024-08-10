@@ -26,7 +26,6 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
   ) {}
 
   @Post('login')
@@ -46,36 +45,19 @@ export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth() {
-    this.logger.log(
-      `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
-    );
     this.logger.log('AuthController - Google Auth Initiated');
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    this.logger.log(
-      `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
-    );
     this.logger.log('AuthController - Google Callback Request:', req.user);
-
-    const user = req.user as any;
-    const { accessToken } = user || {};
-
-    if (accessToken) {
-      res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}`);
-    } else {
-      res.redirect(`${this.configService.get<string>('FRONTEND_URL')}/cadastro`);
-    }
+    this.authService.redirectFederated(req.user as any, res)
   }
 
   @Get('microsoft')
   @UseGuards(AuthGuard('microsoft'))
   async microsoftAuth() {
-    this.logger.log(
-      `front url: ${this.configService.get<string>('FRONTEND_URL')}`,
-    );
     this.logger.log('AuthController - Microsoft Auth Initiated');
   }
 
@@ -86,19 +68,7 @@ export class AuthController {
       'AuthController - Microsoft Callback Request:',
       JSON.stringify(req.user),
     );
-
-    const user = req.user as any;
-    const { accessToken } = user || {};
-
-    if (accessToken) {
-      res.redirect(
-        `${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}`,
-      );
-    } else {
-      res.redirect(
-        `${this.configService.get<string>('FRONTEND_URL')}/cadastro`,
-      );
-    }
+    this.authService.redirectFederated(req.user as any, res)
   }
 
   @Post('refresh')

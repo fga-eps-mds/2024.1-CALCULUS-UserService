@@ -1,6 +1,6 @@
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
-export class CreateUserDtoGoogle {
+export class CreateUserDtoFederated {
   @IsNotEmpty()
   name: string;
 

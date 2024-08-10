@@ -11,8 +11,8 @@ import { ResetTokenSchema } from './interface/reset-token.schema';
   imports: [
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
-      { name: 'RefreshToken', schema: RefreshTokenSchema }, 
-      { name: 'ResetToken', schema: ResetTokenSchema }, 
+      { name: 'RefreshToken', schema: RefreshTokenSchema },
+      { name: 'ResetToken', schema: ResetTokenSchema },
     ]),
   ],
   controllers: [UsersController],

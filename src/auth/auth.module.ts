@@ -25,9 +25,8 @@ import { EmailService } from 'src/users/email.service';
     UsersModule,
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
-      { name: 'RefreshToken', schema: RefreshTokenSchema }, 
-      { name: 'ResetToken', schema: ResetTokenSchema }, 
-
+      { name: 'RefreshToken', schema: RefreshTokenSchema },
+      { name: 'ResetToken', schema: ResetTokenSchema },
     ]),
   ],
   providers: [

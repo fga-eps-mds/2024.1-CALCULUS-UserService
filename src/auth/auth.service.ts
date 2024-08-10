@@ -1,4 +1,10 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
@@ -10,6 +16,9 @@ import { User } from 'src/users/interface/user.interface';
 import { nanoid } from 'nanoid';
 import { EmailService } from 'src/users/email.service';
 import { ResetToken } from 'src/users/interface/reset-token.schema';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+
 
 @Injectable()
 export class AuthService {
@@ -23,37 +32,32 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
 
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(password, user.password))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user.toObject();
       return result;
     }
     throw new UnauthorizedException('Invalid credentials');
   }
 
+  getJwtService() {
+    return this.jwtService;
+  }
+
   async login(user: any) {
-    const payload = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      sub: user._id,
-      role: user.role,
-    };
-
-    const tokens = await this.generateUserTokens(user._id, payload);
-    
-    this.logger.log(
-      'AuthService - Generated Token:',
-      tokens.accessToken,
-      'AuthService - Refresh Token:',
-      tokens.refreshToken,
+    const tokens = await this.generateTokens(
+      {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
     );
-
     return {
       id: user._id,
       name: user.name,
@@ -62,24 +66,51 @@ export class AuthService {
     };
   }
 
-  getJwtService() {
-    return this.jwtService;
+  async loginFederated({
+    email,
+    name,
+  }: { email: string; name: string }) {
+    let user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      user = await this.usersService.createFederatedUser({
+        name,
+        email,
+        username: email,
+        password: '',
+      });
+    }
+    const token = await this.generateTokens({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+
+    return { user, token };
   }
 
-
-  async generateUserTokens(userId: string, payload?: any) {
+  async generateTokens({id, name, email, role}) {
+    const payload = {
+      id: id,
+      name: name,
+      email: email,
+      sub: id,
+      role: role,
+    };
     const accessToken = this.jwtService.sign(
-      { userId, ...payload },
+      { id, ...payload },
       { expiresIn: '10h' },
     );
-  
+
     const refreshToken = uuidv4();
-    await this.storeRefreshToken(refreshToken, userId);
+    await this.storeRefreshToken(refreshToken, id);
     return {
       accessToken,
       refreshToken,
     };
   }
+
   async storeRefreshToken(token: string, userId: string) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 3);
@@ -87,9 +118,7 @@ export class AuthService {
     await this.RefreshTokenModel.updateOne(
       { userId },
       { $set: { expiryDate, token } },
-      {
-        upsert: true,
-      },
+      { upsert: true, },
     );
   }
 
@@ -98,13 +127,19 @@ export class AuthService {
       token: refreshToken,
       expiryDate: { $gte: new Date() },
     });
-    const userId = token.userId.toString(); 
+    const id = token.userId.toString();
     if (!token) {
       throw new UnauthorizedException('Refresh Token is invalid');
     }
-    return this.generateUserTokens(userId );
-  }
+    const user = await this.usersService.findById(token.userId.toString());
 
+    return this.generateTokens({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+  }
 
   async changePassword(userId, oldPassword: string, newPassword: string) {
     const user = await this.userModel.findById(userId);
@@ -121,6 +156,20 @@ export class AuthService {
     await user.save();
   }
 
+  redirectFederated(user: any, res: Response) {;
+    this.logger.log('redirectFederated', user);
+    const { accessToken, refreshToken } = user || {};
+
+    if (accessToken) {
+      res.redirect(
+        `${this.configService.get<string>('FRONTEND_URL')}/oauth?token=${accessToken}&refresh=${refreshToken}`,
+      );
+    } else {
+      res.redirect(
+        `${this.configService.get<string>('FRONTEND_URL')}/cadastro`,
+      );
+    }
+  }
 
   async forgotPassword(email: string) {
     const user = await this.userModel.findOne({ email });
@@ -156,7 +205,7 @@ export class AuthService {
       throw new InternalServerErrorException();
     }
 
-    user.password = newPassword; 
+    user.password = newPassword;
     await user.save();
   }
 }

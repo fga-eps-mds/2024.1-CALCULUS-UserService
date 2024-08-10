@@ -5,7 +5,7 @@ import { EmailService } from 'src/users/email.service';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { UserRole } from 'src/users/dtos/user-role.enum';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { CreateUserDtoGoogle } from 'src/users/dtos/create-user-google.dto';
+import { CreateUserDtoFederated } from 'src/users/dtos/create-user-federated.dto';
 
 interface MockUserModel {
   mockReturnValue(createdUser: {
@@ -111,16 +111,16 @@ describe('UsersService', () => {
     });
   });
 
-  describe('createUserGoogle', () => {
+  describe('createFederatedUser', () => {
     it('should throw ConflictException if user already exists', async () => {
-      const createUserGoogleDto: CreateUserDtoGoogle = {
+      const createFederatedUserDto: CreateUserDtoFederated = {
         name: 'John Doe',
         email: 'john.doe@example.com',
         username: 'john_doe',
       };
 
       await expect(
-        usersService.createUserGoogle(createUserGoogleDto),
+        usersService.createFederatedUser(createFederatedUserDto),
       ).rejects.toThrow(
         new ConflictException('this.userModel is not a constructor'),
       );

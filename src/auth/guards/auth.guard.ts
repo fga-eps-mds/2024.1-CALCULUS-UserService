@@ -27,14 +27,13 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = this.jwtService.verify(token);
-      request.userId = payload.userId; 
+      request.userId = payload.userId;
     } catch (err) {
       throw new UnauthorizedException('Invalid token');
     }
     return true;
-
   }
-  
+
   private extractTokenFromHeader(request: Request): string | undefined {
     return request.headers.authorization?.split(' ')[1];
   }
