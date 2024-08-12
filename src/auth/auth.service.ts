@@ -19,6 +19,7 @@ import { ResetToken } from 'src/users/interface/reset-token.schema';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -103,7 +104,20 @@ export class AuthService {
       refreshToken,
     };
   }
-
+  async validateToken(
+    token: string,
+  ): Promise<{ userId: string; [key: string]: any }> {
+    try {
+      const payload = this.jwtService.verify(token);
+      return {
+        userId: payload.userId,
+        ...payload,
+      };
+    } catch (err) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+  
   async storeRefreshToken(token: string, userId: string) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 3);
