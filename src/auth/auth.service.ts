@@ -184,7 +184,7 @@ export class AuthService {
     return { message: 'Check your email, you will receive an redirect link' };
   }
 
-  async resetPassword(newPassword: string, resetToken: string) {
+  async resetPassword({newPassword, resetToken}: ResetPasswordDto) {
     const token = await this.ResetTokenModel.findOneAndDelete({
       token: resetToken,
       expiryDate: { $gte: new Date() },
