@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { UserRole } from '../dtos/user-role.enum';
 
 export interface User extends Document {
@@ -9,4 +9,6 @@ export interface User extends Document {
   verificationToken?: string;
   isVerified?: boolean;
   role?: UserRole;
+  contents?: mongoose.Types.ObjectId[]; 
+
 }

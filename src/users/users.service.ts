@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { EmailService } from './email.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { CreateUserDtoFederated } from './dtos/create-user-federated.dto';
@@ -78,6 +78,24 @@ export class UsersService {
       throw new NotFoundException(`User with ID '${_id}' not found`);
     }
     return user;
+  }
+
+
+  async addContentToUser(userId: string, contentId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(contentId);
+
+    if (!user.contents) {
+      user.contents = [];
+    }
+
+    user.contents.push(objectId);
+
+    return user.save();
   }
 
   async deleteUserById(_id: string): Promise<void> {

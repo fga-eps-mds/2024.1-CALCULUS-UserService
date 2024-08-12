@@ -48,15 +48,19 @@ export class UsersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Patch(':id/add-content')
+  async addContentToUser(
+    @Param('id') id: string,
+    @Body() body: { contentId: string },
+  ) {
+    return this.usersService.addContentToUser(id, body.contentId);
+  }
+
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
