@@ -1,16 +1,16 @@
 #!/bin/bash
 
-SESSION_NAME="npm_run_session"
+SESSION_NAME="backend-session"
 ENV="dev"
-DIR1="/home/Calculus-admin1/app/2024.1-CALCULUS-Frontend"
+DIR1="/home/Calculus-admin1/app/2024.1-CALCULUS-UserService"
 
 # Comandos renomeados para refletir a ordem de execução
 CMD1="git fetch"
 CMD2="git checkout $ENV"
 CMD3="git pull origin $ENV"
 CMD4="npm install"
-CMD5="npm run start &"
-CMD6="echo Starting Deploy Front"
+CMD5="npm run start"
+CMD6="echo Starting Deploy backend"
 
 # Função para iniciar a sessão tmux e executar comandos
 start_tmux_session() {
@@ -28,6 +28,7 @@ start_tmux_session() {
     tmux send-keys -t $SESSION_NAME "$CMD6" C-m
 
     # Anexar à sessão tmux para visualizar os comandos em execução
+#    tmux attach-session -t $SESSION_NAME
 }
 
 # Função para executar o health check
@@ -35,6 +36,7 @@ run_healthcheck() {
     PORT=3000
     CHECK_INTERVAL=5
 
+    echo "Deploy backend iniciado"
     echo "Iniciando health check para a porta $PORT..."
 
     while true; do
@@ -44,6 +46,7 @@ run_healthcheck() {
         # Verifica se há algum resultado
         if [ -n "$OUTPUT" ]; then
             echo "A porta $PORT está em uso. Encerrando o health check."
+	    echo "Deploy realizado com sucesso!"
             break
         else
             echo "A porta $PORT não está em uso. Verificando novamente em $CHECK_INTERVAL segundos..."
