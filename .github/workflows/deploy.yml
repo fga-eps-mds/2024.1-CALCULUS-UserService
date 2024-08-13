@@ -1,13 +1,11 @@
-name: Deploy App in Azure
+name: Deploy UserService in Azure
 
 # Dispara o workflow para push e pull request na branch 'dev'
 on:
   push:
     branches:
       - dev
-  pull_request:  
-    branches:
-      - dev
+
 
 
 jobs:
