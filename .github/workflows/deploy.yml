@@ -1,0 +1,37 @@
+name: Deploy App in Azure
+
+# Dispara o workflow para push e pull request na branch 'dev'
+on:
+  push:
+    branches:
+      - dev
+  pull_request:  
+    branches:
+      - dev
+
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.IP_VM_AZURE_DEV }}
+          username: ${{ secrets.USER_VM_AZURE_DEV }}
+          password: ${{ secrets.USER_VM_AZURE_DEV }}
+          port: 22
+          request_pty: true
+          script: |
+            ls -alt
+            cd /home/Calculus-admin1/app 
+            pwd
+            sudo ./manage_process_back.sh
+            echo "Starting deploy User Service"
+            sudo ./deploy_back.sh
+
+      
