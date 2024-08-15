@@ -81,23 +81,24 @@ export class UsersService {
   }
 
 
-  async addContentToUser(userId: string, contentId: string): Promise<User> {
+  async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    const objectId = new Types.ObjectId(contentId);
+    const objectId = new Types.ObjectId(journeyId);
 
-    if (!user.contents) {
-      user.contents = [];
+    if (!user.journeys) {
+      user.journeys = [];
     }
 
-    user.contents.push(objectId);
+    if (!user.journeys.includes(objectId)) {
+      user.journeys.push(objectId);
+    }
 
     return user.save();
   }
-
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();
     if (result.deletedCount === 0) {

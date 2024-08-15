@@ -52,13 +52,16 @@ export class UsersController {
   async getUsers() {
     return await this.usersService.getUsers();
   }
-
-  @Patch(':id/add-content')
-  async addContentToUser(
+  @Patch(':id/add-journey')
+  async addJourneyToUser(
     @Param('id') id: string,
-    @Body() body: { contentId: string },
+    @Body() body: { journeyId: string },
   ) {
-    return this.usersService.addContentToUser(id, body.contentId);
+    try {
+      return await this.usersService.addJourneyToUser(id, body.journeyId);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get('/:id')
