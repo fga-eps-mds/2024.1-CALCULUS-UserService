@@ -155,7 +155,9 @@ describe('AuthController', () => {
         'AuthController - Microsoft Callback Request:',
         JSON.stringify(req.user),
       );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/oauth?token=token`);
+      expect(res.redirect).toHaveBeenCalledWith(
+        `${frontendUrl}/oauth?token=token`,
+      );
     });
 
     it('should redirect to registration URL if accessToken is not present', () => {

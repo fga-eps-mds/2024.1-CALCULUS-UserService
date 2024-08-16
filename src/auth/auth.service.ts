@@ -19,7 +19,6 @@ import { ResetToken } from 'src/users/interface/reset-token.schema';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -117,7 +116,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid token');
     }
   }
-  
+
   async storeRefreshToken(token: string, userId: string) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 3);

@@ -80,7 +80,6 @@ export class UsersService {
     return user;
   }
 
-
   async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {

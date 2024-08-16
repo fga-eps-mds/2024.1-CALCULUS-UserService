@@ -9,6 +9,5 @@ export interface User extends Document {
   verificationToken?: string;
   isVerified?: boolean;
   role?: UserRole;
-  journeys?: mongoose.Types.ObjectId[]; 
-
+  journeys?: mongoose.Types.ObjectId[];
 }
