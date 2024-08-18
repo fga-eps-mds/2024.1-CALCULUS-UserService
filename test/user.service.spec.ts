@@ -27,9 +27,6 @@ describe('UsersService', () => {
     save: jest.fn().mockResolvedValue(this), // Mock da instância
   };
 
-
-
-
   const mockUpdateRoleDto: UpdateRoleDto = {
     role: UserRole.ADMIN,
   };
@@ -73,7 +70,6 @@ describe('UsersService', () => {
     expect(service).toBeDefined();
   });
 
- 
   it('should verify a user', async () => {
     const result = await service.verifyUser('mockToken');
     expect(result).toEqual(mockUser);
