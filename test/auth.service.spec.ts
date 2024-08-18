@@ -78,7 +78,12 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return user data with tokens', async () => {
-      const user = { _id: 'user-id', name: 'Test User', email: 'test@example.com', role: 'user' };
+      const user = {
+        _id: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'user',
+      };
       jest.spyOn(service, 'generateTokens').mockResolvedValue({
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -101,7 +106,9 @@ describe('AuthService', () => {
       const name = 'Test User';
       const user = { _id: 'user-id', name, email, role: 'user' };
       jest.spyOn(usersService, 'findByEmail').mockResolvedValue(null);
-      jest.spyOn(usersService, 'createFederatedUser').mockResolvedValue(user as any);
+      jest
+        .spyOn(usersService, 'createFederatedUser')
+        .mockResolvedValue(user as any);
       jest.spyOn(service, 'generateTokens').mockResolvedValue({
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -137,7 +144,10 @@ describe('AuthService', () => {
   describe('storeRefreshToken', () => {
     it('should store refresh token in the database', async () => {
       jest.spyOn(refreshTokenModel, 'updateOne').mockResolvedValue({} as any);
-      const result = await service.storeRefreshToken('refresh-token', 'user-id');
+      const result = await service.storeRefreshToken(
+        'refresh-token',
+        'user-id',
+      );
       expect(result).toBeUndefined();
     });
   });
@@ -182,9 +192,9 @@ describe('AuthService', () => {
     it('should throw NotFoundException if user does not exist', async () => {
       jest.spyOn(userModel, 'findById').mockResolvedValue(null);
 
-      await expect(service.changePassword('user-id', 'old-password', 'new-password'))
-        .rejects
-        .toThrow(NotFoundException);
+      await expect(
+        service.changePassword('user-id', 'old-password', 'new-password'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -199,7 +209,7 @@ describe('AuthService', () => {
 
       service.redirectFederated(user, res);
       expect(res.redirect).toHaveBeenCalledWith(
-        'http://frontend-url/oauth?token=access-token&refresh=refresh-token'
+        'http://frontend-url/oauth?token=access-token&refresh=refresh-token',
       );
     });
 
@@ -220,21 +230,25 @@ describe('AuthService', () => {
       const resetToken = 'reset-token'; // Isso pode ser ajustado conforme necessário
       const expiryDate = new Date();
       expiryDate.setHours(expiryDate.getHours() + 1);
-  
+
       jest.spyOn(userModel, 'findOne').mockResolvedValue(user as any);
       jest.spyOn(resetTokenModel, 'create').mockResolvedValue({
         token: resetToken,
         userId: user._id,
         expiryDate,
       } as any);
-      jest.spyOn(emailService, 'sendPasswordResetEmail').mockImplementation(() => Promise.resolve());
-  
+      jest
+        .spyOn(emailService, 'sendPasswordResetEmail')
+        .mockImplementation(() => Promise.resolve());
+
       const result = await service.forgotPassword(email);
-  
-      expect(result).toEqual({ message: 'Check your email, you will receive an redirect link' });
+
+      expect(result).toEqual({
+        message: 'Check your email, you will receive an redirect link',
+      });
       expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
         email,
-        expect.any(String) // Aqui estamos esperando qualquer string para o token
+        expect.any(String), // Aqui estamos esperando qualquer string para o token
       );
     });
   });
@@ -243,13 +257,19 @@ describe('AuthService', () => {
     it('should reset the user password', async () => {
       const newPassword = 'new-password';
       const resetToken = 'reset-token';
-      const user = { _id: 'user-id', password: 'old-password', save: jest.fn() };
+      const user = {
+        _id: 'user-id',
+        password: 'old-password',
+        save: jest.fn(),
+      };
       const tokenData = {
         userId: user._id,
         expiryDate: new Date(),
       };
 
-      jest.spyOn(resetTokenModel, 'findOneAndDelete').mockResolvedValue(tokenData as any);
+      jest
+        .spyOn(resetTokenModel, 'findOneAndDelete')
+        .mockResolvedValue(tokenData as any);
       jest.spyOn(userModel, 'findById').mockResolvedValue(user as any);
 
       await service.resetPassword({ newPassword, resetToken });
@@ -261,23 +281,26 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if token is invalid', async () => {
       jest.spyOn(resetTokenModel, 'findOneAndDelete').mockResolvedValue(null);
 
-      await expect(service.resetPassword({ newPassword: 'new-password', resetToken: 'invalid-token' }))
-        .rejects
-        .toThrow(UnauthorizedException);
+      await expect(
+        service.resetPassword({
+          newPassword: 'new-password',
+          resetToken: 'invalid-token',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw NotFoundException if user does not exist', async () => {
       const resetToken = 'reset-token';
       const newPassword = 'new-password';
       jest.spyOn(resetTokenModel, 'findOneAndDelete').mockResolvedValue({
-          userId: 'user-id',
-          expiryDate: new Date(),
-        } as any);
+        userId: 'user-id',
+        expiryDate: new Date(),
+      } as any);
       jest.spyOn(userModel, 'findById').mockResolvedValue(null);
 
-      await expect(service.resetPassword({ newPassword, resetToken }))
-        .rejects
-        .toThrow(NotFoundException);
+      await expect(
+        service.resetPassword({ newPassword, resetToken }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
