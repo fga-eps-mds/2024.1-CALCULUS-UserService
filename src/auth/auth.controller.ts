@@ -113,15 +113,6 @@ export class AuthController {
 
   @Put('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    if (resetPasswordDto.newPassword !== resetPasswordDto.confirmPassword) {
-      throw new UnauthorizedException('Passwords are not the same');
-    }
-
-    await this.authService.resetPassword(
-      resetPasswordDto.newPassword,
-      resetPasswordDto.resetToken,
-    );
-
-    return { message: 'Password reset successful' };
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

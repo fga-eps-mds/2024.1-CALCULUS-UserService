@@ -18,6 +18,7 @@ import { EmailService } from 'src/users/email.service';
 import { ResetToken } from 'src/users/interface/reset-token.schema';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { ResetPasswordDto } from 'src/users/dtos/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -180,23 +181,23 @@ export class AuthService {
   async forgotPassword(email: string) {
     const user = await this.userModel.findOne({ email });
 
-    if (user) {
-      const expiryDate = new Date();
-      expiryDate.setHours(expiryDate.getHours() + 1);
-
-      const resetToken = nanoid(64);
-      await this.ResetTokenModel.create({
-        token: resetToken,
-        userId: user._id,
-        expiryDate,
-      });
-      this.emailService.sendPasswordResetEmail(email, resetToken);
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+    const expiryDate = new Date();
+    expiryDate.setHours(expiryDate.getHours() + 1);
+    const resetToken = nanoid(64);
+    await this.ResetTokenModel.create({
+      token: resetToken,
+      userId: user._id,
+      expiryDate,
+    });
+    this.emailService.sendPasswordResetEmail(email, resetToken);
 
-    return { message: 'If this user exists, they will receive an email' };
+    return { message: 'Check your email, you will receive an redirect link' };
   }
 
-  async resetPassword(newPassword: string, resetToken: string) {
+  async resetPassword({newPassword, resetToken}: ResetPasswordDto) {
     const token = await this.ResetTokenModel.findOneAndDelete({
       token: resetToken,
       expiryDate: { $gte: new Date() },
@@ -208,10 +209,10 @@ export class AuthService {
 
     const user = await this.userModel.findById(token.userId);
     if (!user) {
-      throw new InternalServerErrorException();
+      throw new NotFoundException('User not found...');
     }
-
     user.password = newPassword;
     await user.save();
+    return { message: 'Password reset successful' };
   }
 }
