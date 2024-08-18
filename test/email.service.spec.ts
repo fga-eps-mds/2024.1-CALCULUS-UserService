@@ -13,7 +13,6 @@ jest.mock('nodemailer-sendgrid-transport', () =>
 describe('EmailService', () => {
   let emailService: EmailService;
   let mockTransporter: jest.Mocked<nodemailer.Transporter>;
-  let configService: ConfigService;
 
   beforeEach(async () => {
     mockTransporter = {
@@ -44,7 +43,6 @@ describe('EmailService', () => {
     }).compile();
 
     emailService = module.get<EmailService>(EmailService);
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   it('should be defined', () => {
@@ -61,7 +59,7 @@ describe('EmailService', () => {
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Bem-vindo!',
-        html: expect.any(String), // Use `expect.any(String)` to match the HTML content
+        html: expect.any(String),
       });
     });
   });
@@ -77,7 +75,7 @@ describe('EmailService', () => {
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Solicitação de Redefinição de Senha',
-        html: expect.any(String), // Use `expect.any(String)` to match the HTML content
+        html: expect.any(String),
       });
     });
   });

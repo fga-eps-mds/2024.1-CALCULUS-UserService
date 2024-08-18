@@ -20,8 +20,17 @@ describe('GoogleStrategy', () => {
           provide: AuthService,
           useValue: {
             loginFederated: jest.fn().mockResolvedValue({
-              user: { toObject: () => ({ id: '123', email: 'test@example.com', name: 'Test User' }) },
-              token: { accessToken: 'access-token', refreshToken: 'refresh-token' },
+              user: {
+                toObject: () => ({
+                  id: '123',
+                  email: 'test@example.com',
+                  name: 'Test User',
+                }),
+              },
+              token: {
+                accessToken: 'access-token',
+                refreshToken: 'refresh-token',
+              },
             }),
           },
         },

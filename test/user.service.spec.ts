@@ -4,16 +4,13 @@ import { getModelToken } from '@nestjs/mongoose';
 import { EmailService } from '../src/users/email.service';
 import { Model } from 'mongoose';
 import { User } from '../src/users/interface/user.interface';
-import { CreateUserDto } from '../src/users/dtos/create-user.dto';
-import { CreateUserDtoFederated } from '../src/users/dtos/create-user-federated.dto';
 import { UserRole } from '../src/users/dtos/user-role.enum';
 import { UpdateRoleDto } from '../src/users/dtos/update-role.dto';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
   let model: Model<User>;
-  let emailService: EmailService;
 
   const mockUser = {
     _id: 'mockId',
@@ -63,7 +60,6 @@ describe('UsersService', () => {
 
     service = module.get<UsersService>(UsersService);
     model = module.get<Model<User>>(getModelToken('User'));
-    emailService = module.get<EmailService>(EmailService);
   });
 
   it('should be defined', () => {

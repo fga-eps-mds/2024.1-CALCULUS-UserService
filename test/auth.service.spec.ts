@@ -11,7 +11,6 @@ import * as bcrypt from 'bcryptjs';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from 'src/auth/auth.service';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { nanoid } from 'nanoid'; // Certifique-se de importar nanoid se não estiver já no seu código
 
 describe('AuthService', () => {
   let service: AuthService;

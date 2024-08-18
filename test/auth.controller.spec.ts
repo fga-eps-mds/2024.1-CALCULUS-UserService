@@ -8,7 +8,6 @@ import { Logger, UnauthorizedException } from '@nestjs/common';
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  let logger: Logger;
 
   const mockAuthService = {
     validateUser: jest.fn(),
@@ -49,7 +48,6 @@ describe('AuthController', () => {
 
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
-    logger = module.get<Logger>(Logger);
   });
 
   describe('login', () => {

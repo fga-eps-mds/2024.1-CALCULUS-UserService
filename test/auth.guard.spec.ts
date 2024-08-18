@@ -71,7 +71,9 @@ describe('JwtAuthGuard', () => {
     expect((context.switchToHttp().getRequest() as any).userId).toBe('user-id');
   });
 
-  function createMockExecutionContext(request: Partial<Request>): ExecutionContext {
+  function createMockExecutionContext(
+    request: Partial<Request>,
+  ): ExecutionContext {
     return {
       switchToHttp: () => ({
         getRequest: () => request as Request,
