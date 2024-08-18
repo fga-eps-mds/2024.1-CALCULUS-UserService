@@ -28,8 +28,8 @@ jobs:
             ls -alt
             cd /home/Calculus-admin1/app 
             pwd
-            sudo ./manage_process_back.sh
+            sudo ./manage_process_back_user.sh
             echo "Starting deploy User Service"
-            sudo ./deploy_back.sh
+            sudo ./deploy_back_user.sh
 
       
