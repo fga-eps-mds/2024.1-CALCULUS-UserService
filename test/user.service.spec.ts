@@ -36,7 +36,8 @@ describe('UsersService', () => {
       verificationToken: 'anotherMockToken',
       isVerified: true,
       save: jest.fn().mockResolvedValue(this),
-  }];
+    },
+  ];
 
   const mockUpdateRoleDto: UpdateRoleDto = {
     role: UserRole.ADMIN,
@@ -160,7 +161,7 @@ describe('UsersService', () => {
   it('should add a journey to a user', async () => {
     const journeyId = new Types.ObjectId();
     const userWithJourney = { ...mockUser, journeys: [journeyId] };
-    
+
     jest.spyOn(model, 'findById').mockReturnValueOnce({
       exec: jest.fn().mockResolvedValue(mockUser),
     } as any);

@@ -302,4 +302,157 @@ describe('AuthService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('validateToken', () => {
+    it('should return user information if token is valid', async () => {
+      const token = 'valid-token';
+      const payload = {
+        userId: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+      };
+
+      jest.spyOn(jwtService, 'verify').mockReturnValue(payload);
+
+      const result = await service.validateToken(token);
+
+      expect(result).toEqual({
+        userId: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+      });
+    });
+
+    it('should throw UnauthorizedException if token is invalid', async () => {
+      const token = 'invalid-token';
+
+      jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+        throw new Error('Invalid token');
+      });
+
+      await expect(service.validateToken(token)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('refreshTokens', () => {
+    it('should return new tokens if refresh token is valid', async () => {
+      const refreshToken = 'valid-refresh-token';
+      const tokenData = { userId: 'user-id', expiryDate: new Date() };
+      const user = {
+        _id: 'user-id',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'user',
+      };
+      const newTokens = {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      };
+
+      jest
+        .spyOn(refreshTokenModel, 'findOne')
+        .mockResolvedValue(tokenData as any);
+      jest.spyOn(usersService, 'findById').mockResolvedValue(user as any);
+      jest.spyOn(service, 'generateTokens').mockResolvedValue(newTokens);
+
+      const result = await service.refreshTokens(refreshToken);
+
+      expect(result).toEqual(newTokens);
+    });
+
+    it('should throw UnauthorizedException if refresh token is invalid', async () => {
+      const refreshToken = 'invalid-refresh-token';
+
+      jest.spyOn(refreshTokenModel, 'findOne').mockResolvedValue(null);
+
+      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
+        TypeError,
+      );
+    });
+
+    it('should throw UnauthorizedException if refresh token is expired', async () => {
+      const refreshToken = 'expired-refresh-token';
+      const expiredTokenData = {
+        userId: 'user-id',
+        expiryDate: new Date(Date.now() - 1000), // 1 second in the past
+      };
+
+      jest
+        .spyOn(refreshTokenModel, 'findOne')
+        .mockResolvedValue(expiredTokenData as any);
+
+      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
+        TypeError,
+      );
+    });
+  });
+
+  describe('validateUser', () => {
+    it('should return user data without password if credentials are valid', async () => {
+      const email = 'test@example.com';
+      const password = 'password123';
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = {
+        _id: 'user-id',
+        name: 'Test User',
+        email: email,
+        password: hashedPassword,
+        toObject: jest.fn().mockReturnValue({
+          _id: 'user-id',
+          name: 'Test User',
+          email: email,
+          password: hashedPassword,
+        }),
+      };
+
+      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(user as any);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+
+      const result = await service.validateUser(email, password);
+
+      expect(result).toEqual({
+        _id: 'user-id',
+        name: 'Test User',
+        email: email,
+      });
+    });
+
+    it('should throw UnauthorizedException if credentials are invalid', async () => {
+      const email = 'test@example.com';
+      const password = 'wrong-password';
+      const hashedPassword = await bcrypt.hash('correct-password', 10);
+      const user = {
+        _id: 'user-id',
+        name: 'Test User',
+        email: email,
+        password: hashedPassword,
+        toObject: jest.fn().mockReturnValue({
+          _id: 'user-id',
+          name: 'Test User',
+          email: email,
+          password: hashedPassword,
+        }),
+      };
+
+      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(user as any);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+
+      await expect(service.validateUser(email, password)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw UnauthorizedException if user is not found', async () => {
+      const email = 'test@example.com';
+      const password = 'password123';
+
+      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(null);
+
+      await expect(service.validateUser(email, password)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
 });
