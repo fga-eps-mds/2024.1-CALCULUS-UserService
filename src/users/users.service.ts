@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import { EmailService } from './email.service';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { CreateUserDtoGoogle } from './dtos/create-user-google.dto';
+import { CreateUserDtoFederated } from './dtos/create-user-federated.dto';
 import { User } from './interface/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -44,14 +44,14 @@ export class UsersService {
     }
   }
 
-  async createUserGoogle(
-    createUserGoogleDto: CreateUserDtoGoogle,
+  async createFederatedUser(
+    createFederatedUserDto: CreateUserDtoFederated,
   ): Promise<any> {
-    if (!createUserGoogleDto.password) {
-      delete createUserGoogleDto.password;
+    if (!createFederatedUserDto.password) {
+      delete createFederatedUserDto.password;
     }
 
-    const createdUser = new this.userModel(createUserGoogleDto);
+    const createdUser = new this.userModel(createFederatedUserDto);
     return createdUser.save();
   }
 
