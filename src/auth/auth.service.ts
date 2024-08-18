@@ -1,6 +1,5 @@
 import {
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
   UnauthorizedException,
@@ -38,6 +37,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(password, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user.toObject();
       return result;
     }
@@ -134,6 +134,7 @@ export class AuthService {
       token: refreshToken,
       expiryDate: { $gte: new Date() },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const id = token.userId.toString();
     if (!token) {
       throw new UnauthorizedException('Refresh Token is invalid');
@@ -197,7 +198,7 @@ export class AuthService {
     return { message: 'Check your email, you will receive an redirect link' };
   }
 
-  async resetPassword({newPassword, resetToken}: ResetPasswordDto) {
+  async resetPassword({ newPassword, resetToken }: ResetPasswordDto) {
     const token = await this.ResetTokenModel.findOneAndDelete({
       token: resetToken,
       expiryDate: { $gte: new Date() },
