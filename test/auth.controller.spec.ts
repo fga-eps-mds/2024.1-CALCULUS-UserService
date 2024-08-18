@@ -4,6 +4,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Request } from 'express';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -17,6 +18,7 @@ describe('AuthController', () => {
     forgotPassword: jest.fn(),
     resetPassword: jest.fn(),
     redirectFederated: jest.fn(),
+    validateToken: jest.fn(),
   };
 
   const mockJwtService = {
@@ -141,7 +143,6 @@ describe('AuthController', () => {
       expect(await authController.forgotPassword(forgotPasswordDto)).toEqual({
         message: 'Password reset link sent',
       });
-
     });
   });
 
@@ -159,6 +160,44 @@ describe('AuthController', () => {
       expect(await authController.resetPassword(resetPasswordDto)).toEqual({
         message: 'Password has been reset',
       });
+    });
+  });
+
+  describe('validateToken', () => {
+    it('should return the user payload if token is valid', async () => {
+      const token = 'valid-token';
+      const payload = { userId: '1', email: 'test@test.com' };
+      const req = { headers: { authorization: `Bearer ${token}` } } as Request;
+
+      jest.spyOn(authService, 'validateToken').mockResolvedValue(payload);
+
+      const result = await authController.validateToken(req);
+
+      expect(result).toEqual({
+        accessToken: token,
+        userPayload: payload,
+      });
+    });
+
+    it('should throw UnauthorizedException if token is not found', async () => {
+      const req = { headers: {} } as Request;
+
+      await expect(authController.validateToken(req)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw UnauthorizedException if token is invalid', async () => {
+      const token = 'invalid-token';
+      const req = { headers: { authorization: `Bearer ${token}` } } as Request;
+
+      jest
+        .spyOn(authService, 'validateToken')
+        .mockRejectedValue(new UnauthorizedException('Invalid token'));
+
+      await expect(authController.validateToken(req)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

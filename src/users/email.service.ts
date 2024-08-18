@@ -174,7 +174,7 @@ export class EmailService {
             <div style="text-align: center;">
               <a href="${resetLink}" class="button">Redefinir Senha</a>
             </div>
-            <p>Seu pedido de recuperação de conta foir realizado.Para alterar sua senha, clique no botão abaixo:</p>
+            <p>Seu pedido de recuperação de conta foi realizado. Para alterar sua senha, clique no botão abaixo:</p>
              <div class="footer">
               <p>Obrigado,</p>
               <p>Equipe de Suporte</p>
