@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { EmailService } from './email.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { CreateUserDtoFederated } from './dtos/create-user-federated.dto';
@@ -80,6 +80,24 @@ export class UsersService {
     return user;
   }
 
+  async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(journeyId);
+
+    if (!user.journeys) {
+      user.journeys = [];
+    }
+
+    if (!user.journeys.includes(objectId)) {
+      user.journeys.push(objectId);
+    }
+
+    return user.save();
+  }
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();
     if (result.deletedCount === 0) {

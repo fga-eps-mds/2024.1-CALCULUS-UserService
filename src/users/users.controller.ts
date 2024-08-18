@@ -48,15 +48,22 @@ export class UsersController {
     };
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
   }
+  @Patch(':id/add-journey')
+  async addJourneyToUser(
+    @Param('id') id: string,
+    @Body() body: { journeyId: string },
+  ) {
+    try {
+      return await this.usersService.addJourneyToUser(id, body.journeyId);
+    } catch (error) {
+      throw error;
+    }
+  }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {

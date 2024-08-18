@@ -104,6 +104,19 @@ export class AuthService {
       refreshToken,
     };
   }
+  async validateToken(
+    token: string,
+  ): Promise<{ userId: string; [key: string]: any }> {
+    try {
+      const payload = this.jwtService.verify(token);
+      return {
+        userId: payload.userId,
+        ...payload,
+      };
+    } catch (err) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 
   async storeRefreshToken(token: string, userId: string) {
     const expiryDate = new Date();

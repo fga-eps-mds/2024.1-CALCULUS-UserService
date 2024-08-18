@@ -68,6 +68,25 @@ export class AuthController {
     this.authService.redirectFederated(req.user as any, res);
   }
 
+  @Get('validate-token')
+  async validateToken(@Req() req: Request) {
+    const token = this.extractTokenFromHeader(req);
+
+    if (!token) {
+      throw new UnauthorizedException('Token not found');
+    }
+
+    const payload = await this.authService.validateToken(token);
+
+    return {
+      accessToken: token,
+      userPayload: payload,
+    };
+  }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    return request.headers.authorization?.split(' ')[1];
+  }
   @Post('refresh')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);

@@ -141,6 +141,7 @@ describe('AuthController', () => {
       expect(await authController.forgotPassword(forgotPasswordDto)).toEqual({
         message: 'Password reset link sent',
       });
+
     });
   });
 
