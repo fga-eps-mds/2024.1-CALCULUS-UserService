@@ -32,7 +32,7 @@ describe('EmailService', () => {
 
   describe('sendVerificationEmail', () => {
     it('should send an email', async () => {
-      const loginLink = process.env.EMAIL_LINK
+      const loginLink = process.env.EMAIL_LINK;
 
       const email = 'test@example.com';
 
@@ -42,7 +42,7 @@ describe('EmailService', () => {
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Bem-vindo!',
-      html: `
+        html: `
         <html>
         <head>
           <style>
