@@ -1,15 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException } from '@nestjs/common';
-import { LoginDto } from 'src/users/dtos/login.dto';
-import { Request, Response } from 'express';
-import { AuthService } from 'src/auth/auth.service';
 import { AuthController } from 'src/auth/auth.controller';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { Logger, UnauthorizedException } from '@nestjs/common';
+import { Request } from 'express';
 
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  let configService: ConfigService;
+
+  const mockAuthService = {
+    validateUser: jest.fn(),
+    login: jest.fn(),
+    refreshTokens: jest.fn(),
+    changePassword: jest.fn(),
+    forgotPassword: jest.fn(),
+    resetPassword: jest.fn(),
+    redirectFederated: jest.fn(),
+    validateToken: jest.fn(),
+  };
+
+  const mockJwtService = {
+    sign: jest.fn(),
+    verify: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,55 +32,49 @@ describe('AuthController', () => {
       providers: [
         {
           provide: AuthService,
-          useValue: {
-            validateUser: jest.fn(),
-            login: jest.fn(),
-          },
+          useValue: mockAuthService,
         },
         {
-          provide: ConfigService,
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
+        {
+          provide: Logger,
           useValue: {
-            get: jest.fn(),
+            log: jest.fn(),
           },
         },
+        ConfigService, // Adicione qualquer outro serviço necessário aqui
       ],
     }).compile();
 
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
-    configService = module.get<ConfigService>(ConfigService);
-
-    // Defina as variáveis de ambiente para os testes
-    process.env.FRONTEND_URL = 'http://localhost:3000';
   });
 
   describe('login', () => {
     it('should return a token if credentials are valid', async () => {
-      const loginDto: LoginDto = {
-        email: 'test@example.com',
-        password: 'password',
+      const loginDto = { email: 'test@test.com', password: 'password' };
+      const result = {
+        accessToken: 'token',
+        refreshToken: 'refresh-token',
+        id: 1,
+        name: 'Test User',
+        email: 'test@test.com',
       };
-      const user = { id: 'user-id', email: 'test@example.com' };
-      const token = 'token';
-      authService.validateUser = jest.fn().mockResolvedValue(user);
-      authService.login = jest.fn().mockResolvedValue({ access_token: token });
 
-      const result = await authController.login(loginDto);
+      jest
+        .spyOn(authService, 'validateUser')
+        .mockResolvedValue({ id: 1, ...loginDto });
+      jest.spyOn(authService, 'login').mockResolvedValue(result);
 
-      expect(authService.validateUser).toHaveBeenCalledWith(
-        loginDto.email,
-        loginDto.password,
-      );
-      expect(authService.login).toHaveBeenCalledWith(user);
-      expect(result).toEqual({ access_token: token });
+      expect(await authController.login(loginDto)).toBe(result);
     });
 
     it('should throw UnauthorizedException if credentials are invalid', async () => {
-      const loginDto: LoginDto = {
-        email: 'test@example.com',
-        password: 'password',
-      };
-      authService.validateUser = jest.fn().mockResolvedValue(null);
+      const loginDto = { email: 'test@test.com', password: 'wrongpassword' };
+
+      jest.spyOn(authService, 'validateUser').mockResolvedValue(null);
 
       await expect(authController.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
@@ -73,105 +82,122 @@ describe('AuthController', () => {
     });
   });
 
-  describe('googleAuth', () => {
-    it('should log initiation of Google auth', async () => {
-      const logSpy = jest.spyOn(authController['logger'], 'log');
-      const frontendUrl = process.env.FRONTEND_URL;
-      configService.get = jest.fn().mockReturnValue(frontendUrl);
-
-      await authController.googleAuth();
-
-      expect(logSpy).toHaveBeenCalledWith(`front url: ${frontendUrl}`);
-      expect(logSpy).toHaveBeenCalledWith(
-        'AuthController - Google Auth Initiated',
-      );
-    });
-  });
-
   describe('googleAuthRedirect', () => {
-    it('should redirect to OAuth URL if accessToken is present', () => {
-      const req = { user: { accessToken: 'token' } } as unknown as Request;
-      const res = { redirect: jest.fn() } as unknown as Response;
-      const frontendUrl = process.env.FRONTEND_URL;
-      configService.get = jest.fn().mockReturnValue(frontendUrl);
-      const logSpy = jest.spyOn(authController['logger'], 'log');
+    it('should handle Google auth redirect', async () => {
+      const req = { user: { id: 1, email: 'test@test.com' } } as any;
+      const res = { redirect: jest.fn() } as any;
 
-      authController.googleAuthRedirect(req, res);
-
-      expect(logSpy).toHaveBeenCalledWith(`front url: ${frontendUrl}`);
-      expect(logSpy).toHaveBeenCalledWith(
-        'AuthController - Google Callback Request:',
-        req.user,
-      );
-      expect(res.redirect).toHaveBeenCalledWith(
-        `${frontendUrl}/oauth?token=token`,
-      );
-    });
-
-    it('should redirect to registration URL if accessToken is not present', () => {
-      const req = { user: {} } as Request;
-      const res = { redirect: jest.fn() } as unknown as Response;
-      const frontendUrl = process.env.FRONTEND_URL;
-      configService.get = jest.fn().mockReturnValue(frontendUrl);
-      const logSpy = jest.spyOn(authController['logger'], 'log');
-
-      authController.googleAuthRedirect(req, res);
-
-      expect(logSpy).toHaveBeenCalledWith(`front url: ${frontendUrl}`);
-      expect(logSpy).toHaveBeenCalledWith(
-        'AuthController - Google Callback Request:',
-        req.user,
-      );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/cadastro`);
-    });
-  });
-
-  describe('microsoftAuth', () => {
-    it('should log initiation of Microsoft auth', async () => {
-      const logSpy = jest.spyOn(authController['logger'], 'log');
-      const frontendUrl = process.env.FRONTEND_URL;
-      configService.get = jest.fn().mockReturnValue(frontendUrl);
-
-      await authController.microsoftAuth();
-
-      expect(logSpy).toHaveBeenCalledWith(`front url: ${frontendUrl}`);
-      expect(logSpy).toHaveBeenCalledWith(
-        'AuthController - Microsoft Auth Initiated',
-      );
+      await authController.googleAuthRedirect(req, res);
+      expect(authService.redirectFederated).toHaveBeenCalledWith(req.user, res);
     });
   });
 
   describe('microsoftAuthRedirect', () => {
-    it('should redirect to OAuth URL if accessToken is present', () => {
-      const req = { user: { accessToken: 'token' } } as unknown as Request;
-      const res = { redirect: jest.fn() } as unknown as Response;
-      const frontendUrl = process.env.FRONTEND_URL;
-      configService.get = jest.fn().mockReturnValue(frontendUrl);
-      const logSpy = jest.spyOn(authController['logger'], 'log');
+    it('should handle Microsoft auth redirect', async () => {
+      const req = { user: { id: 1, email: 'test@test.com' } } as any;
+      const res = { redirect: jest.fn() } as any;
 
-      authController.microsoftAuthRedirect(req, res);
+      await authController.microsoftAuthRedirect(req, res);
+      expect(authService.redirectFederated).toHaveBeenCalledWith(req.user, res);
+    });
+  });
 
-      expect(logSpy).toHaveBeenCalledWith(
-        'AuthController - Microsoft Callback Request:',
-        JSON.stringify(req.user),
-      );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/oauth?token=token`);
+  describe('refreshTokens', () => {
+    it('should return new tokens', async () => {
+      const refreshTokenDto = { refreshToken: 'refresh-token' };
+      const result = {
+        accessToken: 'new-token',
+        refreshToken: 'new-refresh-token',
+      };
+
+      jest.spyOn(authService, 'refreshTokens').mockResolvedValue(result);
+
+      expect(await authController.refreshTokens(refreshTokenDto)).toBe(result);
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should change the password successfully', async () => {
+      const changePasswordDto = {
+        oldPassword: 'old-password',
+        newPassword: 'new-password',
+      };
+      const req = { userId: 1 } as any;
+
+      jest.spyOn(authService, 'changePassword').mockResolvedValue(undefined); // Assuming no return value (void)
+
+      await expect(
+        authController.changePassword(changePasswordDto, req),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('should handle forgot password request', async () => {
+      const forgotPasswordDto = { email: 'test@test.com' };
+
+      jest
+        .spyOn(authService, 'forgotPassword')
+        .mockResolvedValue({ message: 'Password reset link sent' });
+
+      expect(await authController.forgotPassword(forgotPasswordDto)).toEqual({
+        message: 'Password reset link sent',
+      });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should reset the password successfully', async () => {
+      const resetPasswordDto = {
+        resetToken: 'reset-token',
+        newPassword: 'new-password',
+      };
+
+      jest
+        .spyOn(authService, 'resetPassword')
+        .mockResolvedValue({ message: 'Password has been reset' });
+
+      expect(await authController.resetPassword(resetPasswordDto)).toEqual({
+        message: 'Password has been reset',
+      });
+    });
+  });
+
+  describe('validateToken', () => {
+    it('should return the user payload if token is valid', async () => {
+      const token = 'valid-token';
+      const payload = { userId: '1', email: 'test@test.com' };
+      const req = { headers: { authorization: `Bearer ${token}` } } as Request;
+
+      jest.spyOn(authService, 'validateToken').mockResolvedValue(payload);
+
+      const result = await authController.validateToken(req);
+
+      expect(result).toEqual({
+        accessToken: token,
+        userPayload: payload,
+      });
     });
 
-    it('should redirect to registration URL if accessToken is not present', () => {
-      const req = { user: {} } as Request;
-      const res = { redirect: jest.fn() } as unknown as Response;
-      const frontendUrl = process.env.FRONTEND_URL;
-      configService.get = jest.fn().mockReturnValue(frontendUrl);
-      const logSpy = jest.spyOn(authController['logger'], 'log');
+    it('should throw UnauthorizedException if token is not found', async () => {
+      const req = { headers: {} } as Request;
 
-      authController.microsoftAuthRedirect(req, res);
-
-      expect(logSpy).toHaveBeenCalledWith(
-        'AuthController - Microsoft Callback Request:',
-        JSON.stringify(req.user),
+      await expect(authController.validateToken(req)).rejects.toThrow(
+        UnauthorizedException,
       );
-      expect(res.redirect).toHaveBeenCalledWith(`${frontendUrl}/cadastro`);
+    });
+
+    it('should throw UnauthorizedException if token is invalid', async () => {
+      const token = 'invalid-token';
+      const req = { headers: { authorization: `Bearer ${token}` } } as Request;
+
+      jest
+        .spyOn(authService, 'validateToken')
+        .mockRejectedValue(new UnauthorizedException('Invalid token'));
+
+      await expect(authController.validateToken(req)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

@@ -1,265 +1,189 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from '../src/users/users.service';
 import { getModelToken } from '@nestjs/mongoose';
-import { UsersService } from 'src/users/users.service';
-import { EmailService } from 'src/users/email.service';
-import { CreateUserDto } from 'src/users/dtos/create-user.dto';
-import { UserRole } from 'src/users/dtos/user-role.enum';
-import { NotFoundException, ConflictException } from '@nestjs/common';
-import { CreateUserDtoGoogle } from 'src/users/dtos/create-user-google.dto';
-
-interface MockUserModel {
-  mockReturnValue(createdUser: {
-    save: jest.Mock<any, any, any>;
-    name: string;
-    email: string;
-    username: string;
-    password: string;
-    role?: UserRole;
-    _id: string;
-  }): unknown;
-
-  mockImplementation(arg0: () => never): unknown;
-  save: jest.Mock;
-  find: jest.Mock;
-  findById: jest.Mock;
-  deleteOne: jest.Mock;
-  findOne: jest.Mock;
-  exec: jest.Mock;
-}
-
-const mockUserModel = () => ({
-  save: jest.fn(),
-  find: jest.fn().mockReturnThis(), // Mock para a cadeia de chamadas
-  findById: jest.fn().mockReturnThis(), // Mock para a cadeia de chamadas
-  deleteOne: jest.fn().mockReturnThis(), // Mock para a cadeia de chamadas
-  findOne: jest.fn().mockReturnThis(), // Mock para a cadeia de chamadas
-  exec: jest.fn(), // Para ser usado em métodos como find, findById
-});
+import { EmailService } from '../src/users/email.service';
+import { Model, Types } from 'mongoose';
+import { User } from '../src/users/interface/user.interface';
+import { UserRole } from '../src/users/dtos/user-role.enum';
+import { UpdateRoleDto } from '../src/users/dtos/update-role.dto';
+import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
-  let usersService: UsersService;
-  let userModel: MockUserModel;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let emailService: EmailService;
+  let service: UsersService;
+  let model: Model<User>;
+
+  const mockUser = {
+    _id: 'mockId',
+    name: 'Mock Name',
+    email: 'mock@example.com',
+    username: 'mockUsername',
+    password: 'mockPassword',
+    role: UserRole.ALUNO,
+    verificationToken: 'mockToken',
+    isVerified: false,
+    save: jest.fn().mockResolvedValue(this), // Mock da instância
+  };
+
+  const mockUserList = [
+    mockUser,
+    {
+      _id: 'mockId2',
+      name: 'Another Mock Name',
+      email: 'another.mock@example.com',
+      username: 'anotherMockUsername',
+      password: 'anotherMockPassword',
+      role: UserRole.ADMIN,
+      verificationToken: 'anotherMockToken',
+      isVerified: true,
+      save: jest.fn().mockResolvedValue(this),
+    },
+  ];
+
+  const mockUpdateRoleDto: UpdateRoleDto = {
+    role: UserRole.ADMIN,
+  };
+
+  const mockUserModel = {
+    create: jest.fn().mockResolvedValue(mockUser),
+    findOne: jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(mockUser),
+    }),
+    findById: jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(mockUser),
+    }),
+    find: jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(mockUserList),
+    }),
+    deleteOne: jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue({ deletedCount: 1 }),
+    }),
+    new: jest.fn(() => mockUser),
+  };
+
+  const mockEmailService = {
+    sendVerificationEmail: jest.fn().mockResolvedValue(true),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        EmailService,
-        {
-          provide: getModelToken('User'),
-          useValue: mockUserModel(),
-        },
+        { provide: getModelToken('User'), useValue: mockUserModel },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
-    usersService = module.get<UsersService>(UsersService);
-    emailService = module.get<EmailService>(EmailService);
-    userModel = module.get(getModelToken('User')) as MockUserModel;
+    service = module.get<UsersService>(UsersService);
+    model = module.get<Model<User>>(getModelToken('User'));
   });
 
   it('should be defined', () => {
-    expect(usersService).toBeDefined();
+    expect(service).toBeDefined();
   });
 
-  describe('createUser', () => {
-    it('should throw ConflictException if user already exists', async () => {
-      userModel.save.mockRejectedValue({ code: 11000 }); // Simula erro de duplicado
-
-      const createUserDto: CreateUserDto = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        username: 'john_doe',
-        password: 'password',
-        role: UserRole.ALUNO,
-      };
-
-      await expect(usersService.createUser(createUserDto)).rejects.toThrow(
-        new ConflictException('this.userModel is not a constructor'),
-      );
-    });
+  it('should get all users', async () => {
+    const result = await service.getUsers();
+    expect(result).toEqual(mockUserList);
   });
 
-  describe('verifyUser', () => {
-    it('should verify a user and update the verification status', async () => {
-      const token = 'valid-token';
-      const user = {
-        _id: 'some-id',
-        verificationToken: token,
-        isVerified: false,
-        save: jest.fn(),
-      };
-      userModel.findOne.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(user);
-
-      const result = await usersService.verifyUser(token);
-
-      expect(result).toEqual(user);
-      expect(user.verificationToken).toBeUndefined();
-      expect(user.isVerified).toBe(true);
-      expect(user.save).toHaveBeenCalled();
-    });
-
-    it('should throw NotFoundException if token is invalid', async () => {
-      userModel.findOne.mockReturnValue(userModel);
-      userModel.exec.mockResolvedValue(null);
-
-      await expect(usersService.verifyUser('invalid-token')).rejects.toThrow(
-        new NotFoundException('Invalid verification token'),
-      );
-    });
+  it('should verify a user', async () => {
+    const result = await service.verifyUser('mockToken');
+    expect(result).toEqual(mockUser);
+    expect(result.isVerified).toBe(true);
+    expect(mockUser.save).toHaveBeenCalled();
   });
 
-  describe('createUserGoogle', () => {
-    it('should throw ConflictException if user already exists', async () => {
-      const createUserGoogleDto: CreateUserDtoGoogle = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        username: 'john_doe',
-      };
+  it('should throw NotFoundException if user is not found during verification', async () => {
+    jest.spyOn(model, 'findOne').mockReturnValueOnce({
+      exec: jest.fn().mockResolvedValue(null),
+    } as any);
 
-      await expect(
-        usersService.createUserGoogle(createUserGoogleDto),
-      ).rejects.toThrow(
-        new ConflictException('this.userModel is not a constructor'),
-      );
-    });
+    await expect(service.verifyUser('invalidToken')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
-  describe('verifyUser', () => {
-    it('should throw NotFoundException if token is invalid', async () => {
-      userModel.findOne.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(null);
-
-      await expect(usersService.verifyUser('invalid-token')).rejects.toThrow(
-        new NotFoundException('Invalid verification token'),
-      );
-    });
+  it('should return the user if found by ID', async () => {
+    const result = await service.getUserById('mockId');
+    expect(result).toEqual(mockUser);
   });
 
-  describe('getUsers', () => {
-    it('should return an array of users', async () => {
-      const users = [{ _id: 'some-id', name: 'John Doe' }];
-      userModel.find.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(users);
+  it('should throw NotFoundException if user is not found by ID', async () => {
+    jest.spyOn(model, 'findById').mockReturnValueOnce({
+      exec: jest.fn().mockResolvedValue(null),
+    } as any);
 
-      const result = await usersService.getUsers();
-
-      expect(result).toEqual(users);
-      expect(userModel.find).toHaveBeenCalled();
-    });
+    await expect(service.getUserById('invalidId')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
-  describe('getUserById', () => {
-    it('should return a user by id', async () => {
-      const userId = 'some-id';
-      const user = { _id: userId, name: 'John Doe' };
-      userModel.findById.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(user);
-
-      const result = await usersService.getUserById(userId);
-
-      expect(result).toEqual(user);
-      expect(userModel.findById).toHaveBeenCalledWith(userId);
-    });
-
-    it('should throw NotFoundException if user not found', async () => {
-      userModel.findById.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(null);
-
-      await expect(usersService.getUserById('invalid-id')).rejects.toThrow(
-        new NotFoundException(`User with ID 'invalid-id' not found`),
-      );
-    });
+  it('should delete a user by ID', async () => {
+    await service.deleteUserById('mockId');
+    expect(model.deleteOne).toHaveBeenCalledWith({ _id: 'mockId' });
   });
 
-  describe('updateUserRole', () => {
-    it("should update a user's role", async () => {
-      const userId = 'some-id';
-      const updateRoleDto = { role: UserRole.ADMIN };
-      const user = { _id: userId, role: UserRole.ALUNO, save: jest.fn() };
-      userModel.findById.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(user);
+  it('should throw NotFoundException if user to delete is not found', async () => {
+    jest.spyOn(model, 'deleteOne').mockReturnValueOnce({
+      exec: jest.fn().mockResolvedValue({ deletedCount: 0 }),
+    } as any);
 
-      const result = await usersService.updateUserRole(userId, updateRoleDto);
-
-      expect(result).toEqual(user);
-      expect(user.role).toBe(updateRoleDto.role);
-      expect(user.save).toHaveBeenCalled();
-    });
-
-    it('should throw NotFoundException if user not found', async () => {
-      userModel.findById.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(null);
-
-      await expect(
-        usersService.updateUserRole('invalid-id', { role: UserRole.ADMIN }),
-      ).rejects.toThrow(
-        new NotFoundException(`User with ID 'invalid-id' not found`),
-      );
-    });
+    await expect(service.deleteUserById('invalidId')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
-  describe('deleteUserById', () => {
-    it('should delete a user by id', async () => {
-      const userId = 'some-id';
-      userModel.deleteOne.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue({ deletedCount: 1 });
-
-      await usersService.deleteUserById(userId);
-
-      expect(userModel.deleteOne).toHaveBeenCalledWith({ _id: userId });
-    });
-
-    it('should throw NotFoundException if user not found', async () => {
-      userModel.deleteOne.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue({ deletedCount: 0 });
-
-      await expect(usersService.deleteUserById('invalid-id')).rejects.toThrow(
-        new NotFoundException(`User with ID 'invalid-id' not found`),
-      );
-    });
+  it('should find user by email', async () => {
+    const result = await service.findByEmail('mock@example.com');
+    expect(result).toEqual(mockUser);
   });
 
-  describe('findByEmail', () => {
-    it('should find a user by email', async () => {
-      const email = 'john.doe@example.com';
-      const user = { _id: 'some-id', email };
-      userModel.findOne.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(user);
-
-      const result = await usersService.findByEmail(email);
-
-      expect(result).toEqual(user);
-      expect(userModel.findOne).toHaveBeenCalledWith({ email });
-    });
+  it('should find user by ID', async () => {
+    const result = await service.findById('mockId');
+    expect(result).toEqual(mockUser);
   });
 
-  describe('findById', () => {
-    it('should find a user by id', async () => {
-      const userId = 'some-id';
-      const user = { _id: userId, name: 'John Doe' };
-      userModel.findById.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(user);
-
-      const result = await usersService.findById(userId);
-
-      expect(result).toEqual(user);
-      expect(userModel.findById).toHaveBeenCalledWith(userId);
-    });
+  it('should update user role', async () => {
+    const result = await service.updateUserRole('mockId', mockUpdateRoleDto);
+    expect(result).toEqual({ ...mockUser, role: UserRole.ADMIN });
   });
 
-  describe('updateUserRole', () => {
-    it('should throw NotFoundException if user not found', async () => {
-      userModel.findById.mockReturnValue(userModel); // chainable
-      userModel.exec.mockResolvedValue(null);
+  it('should throw NotFoundException if user to update role is not found', async () => {
+    jest.spyOn(model, 'findById').mockReturnValueOnce({
+      exec: jest.fn().mockResolvedValue(null),
+    } as any);
 
-      await expect(
-        usersService.updateUserRole('invalid-id', { role: UserRole.ADMIN }),
-      ).rejects.toThrow(
-        new NotFoundException(`User with ID 'invalid-id' not found`),
-      );
-    });
+    await expect(
+      service.updateUserRole('invalidId', mockUpdateRoleDto),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should add a journey to a user', async () => {
+    const journeyId = new Types.ObjectId();
+    const userWithJourney = { ...mockUser, journeys: [journeyId] };
+
+    jest.spyOn(model, 'findById').mockReturnValueOnce({
+      exec: jest.fn().mockResolvedValue(mockUser),
+    } as any);
+    jest.spyOn(mockUser, 'save').mockResolvedValue(userWithJourney as any);
+
+    const result = await service.addJourneyToUser(
+      'mockId',
+      journeyId.toHexString(),
+    );
+
+    expect(result.journeys).toContain(journeyId);
+    expect(result.journeys.length).toBe(1);
+    expect(mockUser.save).toHaveBeenCalled();
+  });
+
+  it('should throw NotFoundException if user is not found when adding a journey', async () => {
+    jest.spyOn(model, 'findById').mockReturnValueOnce({
+      exec: jest.fn().mockResolvedValue(null),
+    } as any);
+
+    await expect(
+      service.addJourneyToUser('invalidId', 'mockJourneyId'),
+    ).rejects.toThrow(NotFoundException);
   });
 });

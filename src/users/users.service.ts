@@ -1,7 +1,7 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { EmailService } from './email.service';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { CreateUserDtoGoogle } from './dtos/create-user-google.dto';
+import { CreateUserDtoFederated } from './dtos/create-user-federated.dto';
 import { User } from './interface/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -31,7 +31,9 @@ export class UsersService {
     });
 
     try {
-      return await createdUser.save();
+      const user = await createdUser.save();
+      await this.emailService.sendVerificationEmail(email);
+      return user;
     } catch (error) {
       if (error instanceof MongoError && error.code === 11000) {
         throw new ConflictException(
@@ -42,14 +44,14 @@ export class UsersService {
     }
   }
 
-  async createUserGoogle(
-    createUserGoogleDto: CreateUserDtoGoogle,
+  async createFederatedUser(
+    createFederatedUserDto: CreateUserDtoFederated,
   ): Promise<any> {
-    if (!createUserGoogleDto.password) {
-      delete createUserGoogleDto.password;
+    if (!createFederatedUserDto.password) {
+      delete createFederatedUserDto.password;
     }
 
-    const createdUser = new this.userModel(createUserGoogleDto);
+    const createdUser = new this.userModel(createFederatedUserDto);
     return createdUser.save();
   }
 
@@ -78,6 +80,24 @@ export class UsersService {
     return user;
   }
 
+  async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(journeyId);
+
+    if (!user.journeys) {
+      user.journeys = [];
+    }
+
+    if (!user.journeys.includes(objectId)) {
+      user.journeys.push(objectId);
+    }
+
+    return user.save();
+  }
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();
     if (result.deletedCount === 0) {

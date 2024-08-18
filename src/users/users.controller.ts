@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -47,15 +48,22 @@ export class UsersController {
     };
   }
 
-  //@UseGuards(JwtAuthGuard, RolesGuard)
-  //@Roles(UserRole.ADMIN)
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
   }
+  @Patch(':id/add-journey')
+  async addJourneyToUser(
+    @Param('id') id: string,
+    @Body() body: { journeyId: string },
+  ) {
+    try {
+      return await this.usersService.addJourneyToUser(id, body.journeyId);
+    } catch (error) {
+      throw error;
+    }
+  }
 
-  //@UseGuards(JwtAuthGuard, RolesGuard)
-  //@Roles(UserRole.ADMIN)
   @Get('/:id')
   async getUserById(@Param('id') id: string) {
     try {
@@ -68,8 +76,7 @@ export class UsersController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Delete('/:id')
   async deleteUserById(@Param('id') id: string): Promise<void> {
     try {
       await this.usersService.deleteUserById(id);
@@ -81,8 +88,8 @@ export class UsersController {
     }
   }
 
-  //@UseGuards(JwtAuthGuard, RolesGuard)
-  //@Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Patch('/:id/role')
   async updateUserRole(
     @Param('id') id: string,

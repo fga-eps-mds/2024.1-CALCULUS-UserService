@@ -24,6 +24,9 @@ describe('UsersController', () => {
     createUser: jest.fn().mockResolvedValue({
       message: 'User created successfully. Please verify your email.',
     }),
+    addJourneyToUser: jest.fn().mockResolvedValue({
+      message: 'Journey added to user successfully.',
+    }),
     verifyUser: jest.fn().mockResolvedValue(mockUser),
     getUsers: jest.fn().mockResolvedValue([mockUser]),
     getUserById: jest.fn().mockResolvedValue(mockUser),
@@ -201,6 +204,50 @@ describe('UsersController', () => {
 
       await expect(
         usersController.updateUserRole('valid-id', { role: UserRole.ADMIN }),
+      ).rejects.toThrow(new InternalServerErrorException('Some error'));
+    });
+  });
+
+  describe('addJourneyToUser', () => {
+    it('should add a journey to a user successfully', async () => {
+      const userId = '61c0ccf11d7bf83d153d7c06';
+      const journeyId = 'some-journey-id';
+      const result = await usersController.addJourneyToUser(userId, {
+        journeyId,
+      });
+
+      expect(usersService.addJourneyToUser).toHaveBeenCalledWith(
+        userId,
+        journeyId,
+      );
+      expect(result).toEqual({
+        message: 'Journey added to user successfully.',
+      });
+    });
+
+    it('should throw NotFoundException if user or journey not found', async () => {
+      const userId = 'invalid-id';
+      const journeyId = 'some-journey-id';
+
+      jest
+        .spyOn(usersService, 'addJourneyToUser')
+        .mockRejectedValue(new NotFoundException('User or journey not found'));
+
+      await expect(
+        usersController.addJourneyToUser(userId, { journeyId }),
+      ).rejects.toThrow(new NotFoundException('User or journey not found'));
+    });
+
+    it('should rethrow any other error', async () => {
+      const userId = 'valid-id';
+      const journeyId = 'some-journey-id';
+
+      jest
+        .spyOn(usersService, 'addJourneyToUser')
+        .mockRejectedValue(new InternalServerErrorException('Some error'));
+
+      await expect(
+        usersController.addJourneyToUser(userId, { journeyId }),
       ).rejects.toThrow(new InternalServerErrorException('Some error'));
     });
   });
