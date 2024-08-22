@@ -105,6 +105,42 @@ export class UsersService {
     }
   }
 
+  async subscribeJourney(userId: string, journeyId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(journeyId);
+
+    if (!user.subscribedJourneys) {
+      user.subscribedJourneys = [];
+    }
+
+    if (!user.subscribedJourneys.includes(objectId)) {
+      user.subscribedJourneys.push(objectId);
+    }
+
+    return user.save();
+  }
+
+  async unsubscribeJourney(userId: string, journeyId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(journeyId);
+
+    if (user.subscribedJourneys) {
+      user.subscribedJourneys = user.subscribedJourneys.filter(
+        (id) => !id.equals(objectId),
+      );
+    }
+
+    return user.save();
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
   }
