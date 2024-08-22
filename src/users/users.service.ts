@@ -141,6 +141,18 @@ export class UsersService {
     return user.save();
   }
 
+
+  async getSubscribedJourneys(userId: string): Promise<Journey[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return this.journeyModel
+      .find({ _id: { $in: user.subscribedJourneys } })
+      .exec();
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
   }
