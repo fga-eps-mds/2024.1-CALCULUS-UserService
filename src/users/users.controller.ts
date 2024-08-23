@@ -19,6 +19,7 @@ import { Roles } from 'src/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
+import { Types } from 'mongoose';
 
 @Controller('users')
 export class UsersController {
@@ -47,6 +48,15 @@ export class UsersController {
       message: 'Account verified successfully',
     };
   }
+
+  @Get(':userId/subscribedJourneys')
+  async getSubscribedJourneys(
+    @Param('userId') userId: string,
+  ): Promise<Types.ObjectId[]>{
+
+    return await this.usersService.getSubscribedJourneys(userId);
+  }
+
 
   @Get()
   async getUsers() {
