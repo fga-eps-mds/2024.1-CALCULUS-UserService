@@ -113,6 +113,11 @@ export class UsersService {
     }
 
     const objectId = new Types.ObjectId(journeyId);
+    if (user.subscribedJourneys && user.subscribedJourneys.includes(objectId)) {
+      throw new ConflictException(
+        `User already subscribed to journey with ID ${journeyId}`,
+      );
+    }
 
     if (!user.subscribedJourneys) {
       user.subscribedJourneys = [];
