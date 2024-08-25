@@ -68,7 +68,7 @@ export class AuthController {
     this.authService.redirectFederated(req.user as any, res);
   }
 
-  @Get('validate-token')
+  @Get('validateToken')
   async validateToken(@Req() req: Request) {
     const token = this.extractTokenFromHeader(req);
 
@@ -87,13 +87,14 @@ export class AuthController {
   private extractTokenFromHeader(request: Request): string | undefined {
     return request.headers.authorization?.split(' ')[1];
   }
+
   @Post('refresh')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('change-password')
+  @Put('changePassword')
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @Req() req,
@@ -105,12 +106,12 @@ export class AuthController {
     );
   }
 
-  @Post('forgot-password')
+  @Post('forgotPassword')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
-  @Put('reset-password')
+  @Put('resetPassword')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }
