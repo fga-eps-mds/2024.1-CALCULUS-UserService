@@ -13,7 +13,6 @@ import { MongoError } from 'mongodb';
 import { UserRole } from './dtos/user-role.enum';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -148,9 +147,8 @@ export class UsersService {
   }
 
   async getSubscribedJourneys(userId: string): Promise<Types.ObjectId[]> {
-    
     const user = await this.userModel.findById(userId).exec();
-    if(!user){
+    if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 

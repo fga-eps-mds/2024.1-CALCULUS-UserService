@@ -27,7 +27,7 @@ import { EmailService } from 'src/users/email.service';
       { name: 'RefreshToken', schema: RefreshTokenSchema },
       { name: 'ResetToken', schema: ResetTokenSchema },
     ]),
-    UsersModule, 
+    UsersModule,
   ],
   providers: [
     AuthService,

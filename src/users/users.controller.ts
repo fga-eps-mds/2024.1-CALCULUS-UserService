@@ -52,11 +52,9 @@ export class UsersController {
   @Get(':userId/subscribedJourneys')
   async getSubscribedJourneys(
     @Param('userId') userId: string,
-  ): Promise<Types.ObjectId[]>{
-
+  ): Promise<Types.ObjectId[]> {
     return await this.usersService.getSubscribedJourneys(userId);
   }
-
 
   @Get()
   async getUsers() {

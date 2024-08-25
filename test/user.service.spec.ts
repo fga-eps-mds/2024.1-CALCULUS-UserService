@@ -6,8 +6,7 @@ import { Model, Types } from 'mongoose';
 import { User } from '../src/users/interface/user.interface';
 import { UserRole } from '../src/users/dtos/user-role.enum';
 import { UpdateRoleDto } from '../src/users/dtos/update-role.dto';
-import { ConflictException, NotFoundException } from '@nestjs/common';
-import { exec } from 'child_process';
+import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -198,26 +197,26 @@ describe('UsersService', () => {
 
     const result = await service.subscribeJourney('mockId', journeyId);
 
-    expect(result.subscribedJourneys).toContainEqual(new Types.ObjectId(journeyId));
+    expect(result.subscribedJourneys).toContainEqual(
+      new Types.ObjectId(journeyId),
+    );
     expect(result.subscribedJourneys.length).toBe(3);
     expect(result.save).toHaveBeenCalled();
   });
 
-  it('should throw NotFoundException if user is not found when subscribing in a journey', async()=>{
-    
+  it('should throw NotFoundException if user is not found when subscribing in a journey', async () => {
     const journeyId = new Types.ObjectId().toHexString();
 
     jest.spyOn(model, 'findById').mockReturnValueOnce({
       exec: jest.fn().mockResolvedValue(null),
     } as any);
 
-    await expect(service.subscribeJourney('invalidId', journeyId)).rejects.toThrow(
-      NotFoundException
-    );
+    await expect(
+      service.subscribeJourney('invalidId', journeyId),
+    ).rejects.toThrow(NotFoundException);
   });
 
-  it('should unsubscribe user from a journey', async() => {
-
+  it('should unsubscribe user from a journey', async () => {
     const journeyId = new Types.ObjectId().toHexString();
 
     jest.spyOn(model, 'findById').mockReturnValueOnce({
@@ -226,24 +225,25 @@ describe('UsersService', () => {
 
     const result = await service.subscribeJourney('mockId', journeyId);
 
-    expect(service.unsubscribeJourney('mockId', journeyId)).not.toContain(journeyId);
+    expect(service.unsubscribeJourney('mockId', journeyId)).not.toContain(
+      journeyId,
+    );
     expect(result.save).toHaveBeenCalled();
   });
 
   it('should throw NotFoundException if user is not found when unsubscribing from a journey', async () => {
-    
     const journeyId = new Types.ObjectId().toHexString();
-    
+
     jest.spyOn(model, 'findById').mockReturnValueOnce({
       exec: jest.fn().mockResolvedValue(null),
     } as any);
 
-    await expect(service.unsubscribeJourney('invalidId', journeyId)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.unsubscribeJourney('invalidId', journeyId),
+    ).rejects.toThrow(NotFoundException);
   });
 
-  it('should get subscribed journeys of a user', async() => {
+  it('should get subscribed journeys of a user', async () => {
     jest.spyOn(model, 'findById').mockReturnValueOnce({
       exec: jest.fn().mockResolvedValue(mockUser),
     } as any);
