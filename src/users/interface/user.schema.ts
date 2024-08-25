@@ -17,6 +17,9 @@ export const UserSchema = new mongoose.Schema(
       default: UserRole.ALUNO,
     },
     journeys: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Journey' }],
+    subscribedJourneys: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Journey' },
+    ],
   },
   { timestamps: true, collection: 'users' },
 );

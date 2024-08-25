@@ -14,11 +14,12 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UserRole } from './dtos/user-role.enum';
 import { Roles } from 'src/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UpdateRoleDto } from './dtos/update-role.dto';
+import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
+import { Types } from 'mongoose';
 
 @Controller('users')
 export class UsersController {
@@ -48,6 +49,13 @@ export class UsersController {
     };
   }
 
+  @Get(':userId/subscribedJourneys')
+  async getSubscribedJourneys(
+    @Param('userId') userId: string,
+  ): Promise<Types.ObjectId[]> {
+    return await this.usersService.getSubscribedJourneys(userId);
+  }
+
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
@@ -62,6 +70,24 @@ export class UsersController {
     } catch (error) {
       throw error;
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':userId/subscribe/:journeyId')
+  async subscribeJourney(
+    @Param('userId') userId: string,
+    @Param('journeyId') journeyId: string,
+  ) {
+    return this.usersService.subscribeJourney(userId, journeyId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':userId/unsubscribe/:journeyId')
+  async unsubscribeJourney(
+    @Param('userId') userId: string,
+    @Param('journeyId') journeyId: string,
+  ) {
+    return this.usersService.unsubscribeJourney(userId, journeyId);
   }
 
   @Get('/:id')

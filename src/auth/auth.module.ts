@@ -22,12 +22,12 @@ import { EmailService } from 'src/users/email.service';
         expiresIn: '60m',
       },
     }),
-    UsersModule,
     MongooseModule.forFeature([
       { name: 'User', schema: UserSchema },
       { name: 'RefreshToken', schema: RefreshTokenSchema },
       { name: 'ResetToken', schema: ResetTokenSchema },
     ]),
+    UsersModule,
   ],
   providers: [
     AuthService,
@@ -37,6 +37,6 @@ import { EmailService } from 'src/users/email.service';
     EmailService,
   ],
   controllers: [AuthController],
-  exports: [JwtStrategy, PassportModule, AuthService],
+  exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {}
