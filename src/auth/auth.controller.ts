@@ -68,7 +68,7 @@ export class AuthController {
     this.authService.redirectFederated(req.user as any, res);
   }
 
-  @Get('validateToken')
+  @Get('validate-token')
   async validateToken(@Req() req: Request) {
     const token = this.extractTokenFromHeader(req);
 
@@ -94,7 +94,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('changePassword')
+  @Put('change-password')
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @Req() req,
@@ -106,12 +106,12 @@ export class AuthController {
     );
   }
 
-  @Post('forgotPassword')
+  @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
-  @Put('resetPassword')
+  @Put('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }
