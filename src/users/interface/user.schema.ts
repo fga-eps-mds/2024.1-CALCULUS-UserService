@@ -17,6 +17,7 @@ export const UserSchema = new mongoose.Schema(
       default: UserRole.ALUNO,
     },
     journeys: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Journey' }],
+    points: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Point' }],
     subscribedJourneys: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'Journey' },
     ],

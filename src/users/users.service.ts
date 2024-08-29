@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Model, Types } from 'mongoose';
 import { EmailService } from './email.service';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -80,6 +81,24 @@ export class UsersService {
     return user;
   }
 
+  async addPointToUser(userId: string, pointId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(pointId);
+
+    if (!user.points) {
+      user.points = [];
+    }
+
+    if (!user.points.includes(objectId)) {
+      user.points.push(objectId);
+    }
+
+    return user.save();
+  }
   async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
@@ -98,6 +117,7 @@ export class UsersService {
 
     return user.save();
   }
+
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();
     if (result.deletedCount === 0) {
