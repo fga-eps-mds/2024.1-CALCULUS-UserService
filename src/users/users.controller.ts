@@ -72,6 +72,18 @@ export class UsersController {
     }
   }
 
+  @Patch(':id/add-point')
+  async addPointToUser(
+    @Param('id') id: string,
+    @Body() body: { pointId: string },
+  ) {
+    try {
+      return await this.usersService.addPointToUser(id, body.pointId);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post(':userId/subscribe/:journeyId')
   async subscribeJourney(

@@ -81,24 +81,6 @@ export class UsersService {
     return user;
   }
 
-  async addPointToUser(userId: string, pointId: string): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    const objectId = new Types.ObjectId(pointId);
-
-    if (!user.points) {
-      user.points = [];
-    }
-
-    if (!user.points.includes(objectId)) {
-      user.points.push(objectId);
-    }
-
-    return user.save();
-  }
   async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
@@ -113,6 +95,25 @@ export class UsersService {
 
     if (!user.journeys.includes(objectId)) {
       user.journeys.push(objectId);
+    }
+
+    return user.save();
+  }
+
+  async addPointToUser(userId: string, pointId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(pointId);
+
+    if (!user.points) {
+      user.points = [];
+    }
+
+    if (!user.points.includes(objectId)) {
+      user.points.push(objectId);
     }
 
     return user.save();
