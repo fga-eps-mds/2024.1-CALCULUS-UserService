@@ -81,25 +81,6 @@ export class UsersService {
     return user;
   }
 
-  async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    const objectId = new Types.ObjectId(journeyId);
-
-    if (!user.journeys) {
-      user.journeys = [];
-    }
-
-    if (!user.journeys.includes(objectId)) {
-      user.journeys.push(objectId);
-    }
-
-    return user.save();
-  }
-
   async addPointToUser(userId: string, pointId: string): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {

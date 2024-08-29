@@ -60,17 +60,6 @@ export class UsersController {
   async getUsers() {
     return await this.usersService.getUsers();
   }
-  @Patch(':id/add-journey')
-  async addJourneyToUser(
-    @Param('id') id: string,
-    @Body() body: { journeyId: string },
-  ) {
-    try {
-      return await this.usersService.addJourneyToUser(id, body.journeyId);
-    } catch (error) {
-      throw error;
-    }
-  }
 
   @Patch(':id/add-point')
   async addPointToUser(
