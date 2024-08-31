@@ -11,4 +11,5 @@ export interface User extends Document {
   role?: UserRole;
   points?: mongoose.Types.ObjectId[];
   subscribedJourneys?: mongoose.Types.ObjectId[];
+  completedTrails?: mongoose.Types.ObjectId[];
 }

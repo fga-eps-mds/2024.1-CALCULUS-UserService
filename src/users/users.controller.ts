@@ -56,6 +56,13 @@ export class UsersController {
     return await this.usersService.getSubscribedJourneys(userId);
   }
 
+  @Get(':userId/completedTrails')
+  async getCompletedTrails(
+    @Param('userId') userId: string,
+  ): Promise<Types.ObjectId[]> {
+    return await this.usersService.getCompletedTrails(userId);
+  }
+
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
@@ -82,6 +89,7 @@ export class UsersController {
     return this.usersService.subscribeJourney(userId, journeyId);
   }
 
+
   @UseGuards(JwtAuthGuard)
   @Delete(':userId/unsubscribe/:journeyId')
   async unsubscribeJourney(
@@ -89,6 +97,15 @@ export class UsersController {
     @Param('journeyId') journeyId: string,
   ) {
     return this.usersService.unsubscribeJourney(userId, journeyId);
+  }
+  
+  @UseGuards(JwtAuthGuard)
+  @Post(':userId/complete/:trailId')
+  async completeTrail(
+    @Param('userId') userId: string,
+    @Param('trailId') trailId: string,
+  ) {
+    return this.usersService.completeTrail(userId, trailId);
   }
 
   @Get('/:id')
