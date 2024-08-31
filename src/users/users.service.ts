@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Model, Types } from 'mongoose';
 import { EmailService } from './email.service';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -99,6 +98,57 @@ export class UsersService {
 
     return user.save();
   }
+  async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(journeyId);
+
+    if (!user.journeys) {
+      user.journeys = [];
+    }
+
+    if (!user.journeys.includes(objectId)) {
+      user.journeys.push(objectId);
+    }
+
+    return user.save();
+  }
+
+  async getCompletedTrails(userId: string): Promise<Types.ObjectId[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return user.completedTrails;
+  }
+
+  async completeTrail(userId: string, trailId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(trailId);
+    if (user.completedTrails && user.completedTrails.includes(objectId)) {
+      throw new ConflictException(
+        `User already completed trail with ID ${trailId}`,
+      );
+    }
+
+    if (!user.completedTrails) {
+      user.completedTrails = [];
+    }
+
+    if (!user.completedTrails.includes(objectId)) {
+      user.completedTrails.push(objectId);
+    }
+
+    return user.save();
+  }
 
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();
@@ -156,40 +206,6 @@ export class UsersService {
 
     return user.subscribedJourneys;
   }
-
-  async getCompletedTrails(userId: string): Promise<Types.ObjectId[]> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    return user.completedTrails;
-  }
-
-  async completeTrail(userId: string, trailId: string): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    const objectId = new Types.ObjectId(trailId);
-    if (user.completedTrails && user.completedTrails.includes(objectId)) {
-      throw new ConflictException(
-        `User already completed trail with ID ${trailId}`,
-      );
-    }
-
-    if (!user.completedTrails) {
-      user.completedTrails = [];
-    }
-
-    if (!user.completedTrails.includes(objectId)) {
-      user.completedTrails.push(objectId);
-    }
-
-    return user.save();
-  }
-
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
