@@ -56,13 +56,6 @@ export class UsersController {
     return await this.usersService.getSubscribedJourneys(userId);
   }
 
-  @Get(':userId/completedTrails')
-  async getCompletedTrails(
-    @Param('userId') userId: string,
-  ): Promise<Types.ObjectId[]> {
-    return await this.usersService.getCompletedTrails(userId);
-  }
-
   @Get()
   async getUsers() {
     return await this.usersService.getUsers();
@@ -106,6 +99,13 @@ export class UsersController {
     @Param('trailId') trailId: string,
   ) {
     return this.usersService.completeTrail(userId, trailId);
+  }
+
+  @Get(':userId/completedTrails')
+  async getCompletedTrails(
+    @Param('userId') userId: string,
+  ): Promise<Types.ObjectId[]> {
+    return await this.usersService.getCompletedTrails(userId);
   }
 
   @Get('/:id')
