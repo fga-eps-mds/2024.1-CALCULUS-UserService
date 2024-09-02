@@ -80,6 +80,24 @@ export class UsersService {
     return user;
   }
 
+  async addPointToUser(userId: string, pointId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(pointId);
+
+    if (!user.points) {
+      user.points = [];
+    }
+
+    if (!user.points.includes(objectId)) {
+      user.points.push(objectId);
+    }
+
+    return user.save();
+  }
   async addJourneyToUser(userId: string, journeyId: string): Promise<User> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
@@ -98,6 +116,39 @@ export class UsersService {
 
     return user.save();
   }
+
+  async getCompletedTrails(userId: string): Promise<Types.ObjectId[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return user.completedTrails;
+  }
+
+  async completeTrail(userId: string, trailId: string): Promise<User> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const objectId = new Types.ObjectId(trailId);
+
+    const isTrailCompleted = user.completedTrails.some((completedTrailId) =>
+      completedTrailId.equals(objectId),
+    );
+
+    if (isTrailCompleted) {
+      throw new ConflictException(
+        `User already completed trail with ID ${trailId}`,
+      );
+    }
+
+    user.completedTrails.push(objectId);
+
+    return user.save();
+  }
+
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();
     if (result.deletedCount === 0) {

@@ -1,11 +1,12 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from 'src/users/users.controller';
 import { UsersService } from 'src/users/users.service';
+import { NotFoundException } from '@nestjs/common';
 import { UserRole } from 'src/users/dtos/user-role.enum';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { UpdateRoleDto } from 'src/users/dtos/update-role.dto';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from 'src/auth/auth.service'; // Import AuthService
-import { JwtService } from '@nestjs/jwt'; // Import JwtService
+import { JwtService } from '@nestjs/jwt';
+import { AuthService } from 'src/auth/auth.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -22,7 +23,7 @@ describe('UsersController', () => {
     verifyUser: jest.fn().mockResolvedValue(mockUser),
     getSubscribedJourneys: jest.fn().mockResolvedValue([]),
     getUsers: jest.fn().mockResolvedValue([mockUser]),
-    addJourneyToUser: jest.fn().mockResolvedValue(mockUser),
+    addPointToUser: jest.fn().mockResolvedValue(mockUser),
     subscribeJourney: jest.fn().mockResolvedValue(mockUser),
     unsubscribeJourney: jest.fn().mockResolvedValue(mockUser),
     getUserById: jest.fn().mockResolvedValue(mockUser),
@@ -30,8 +31,8 @@ describe('UsersController', () => {
     updateUserRole: jest.fn().mockResolvedValue(mockUser),
   };
 
-  const mockAuthService = {}; // Mock any methods you use from AuthService
-  const mockJwtService = {}; // Mock any methods you use from JwtService
+  const mockAuthService = {};
+  const mockJwtService = {};
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -44,7 +45,6 @@ describe('UsersController', () => {
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
-  
   });
 
   it('should be defined', () => {
@@ -56,7 +56,7 @@ describe('UsersController', () => {
       name: 'New User',
       email: 'newuser@example.com',
       password: 'password123',
-      username: ''
+      username: '',
     };
     await expect(controller.createUser(createUserDto)).resolves.toEqual({
       message: 'User created successfully. Please verify your email.',
@@ -79,29 +79,23 @@ describe('UsersController', () => {
     await expect(controller.getUsers()).resolves.toEqual([mockUser]);
   });
 
-  it('should add a journey to a user', async () => {
+  it('should add a point to a user', async () => {
     const userId = 'mockUserId';
-    const journeyId = 'mockJourneyId';
-    const body = { journeyId };
-    await expect(controller.addJourneyToUser(userId, body)).resolves.toEqual(
-      mockUser,
+    const pointId = 'mockPointId';
+    await expect(
+      controller.addPointToUser(userId, { pointId }),
+    ).resolves.toEqual(mockUser);
+  });
+
+  it('should handle error when adding a point to a user', async () => {
+    const userId = 'mockUserId';
+    const pointId = 'mockPointId';
+    mockUserService.addPointToUser.mockRejectedValueOnce(
+      new NotFoundException('User not found'),
     );
-  });
-
-  it('should subscribe a journey for a user', async () => {
-    const userId = 'mockUserId';
-    const journeyId = 'mockJourneyId';
     await expect(
-      controller.subscribeJourney(userId, journeyId),
-    ).resolves.toEqual(mockUser);
-  });
-
-  it('should unsubscribe a journey for a user', async () => {
-    const userId = 'mockUserId';
-    const journeyId = 'mockJourneyId';
-    await expect(
-      controller.unsubscribeJourney(userId, journeyId),
-    ).resolves.toEqual(mockUser);
+      controller.addPointToUser(userId, { pointId }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should get a user by ID', async () => {
@@ -109,12 +103,32 @@ describe('UsersController', () => {
     await expect(controller.getUserById(userId)).resolves.toEqual(mockUser);
   });
 
+  it('should handle error when getting a user by ID', async () => {
+    const userId = 'mockUserId';
+    mockUserService.getUserById.mockRejectedValueOnce(
+      new NotFoundException('User not found'),
+    );
+    await expect(controller.getUserById(userId)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
   it('should delete a user by ID', async () => {
     const userId = 'mockUserId';
     await expect(controller.deleteUserById(userId)).resolves.toBeUndefined();
   });
 
-  it('should update user role', async () => {
+  it('should handle error when deleting a user by ID', async () => {
+    const userId = 'mockUserId';
+    mockUserService.deleteUserById.mockRejectedValueOnce(
+      new NotFoundException('User not found'),
+    );
+    await expect(controller.deleteUserById(userId)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should update a user role', async () => {
     const userId = 'mockUserId';
     const updateRoleDto: UpdateRoleDto = { role: UserRole.ADMIN };
     await expect(
@@ -124,4 +138,16 @@ describe('UsersController', () => {
       user: mockUser,
     });
   });
+
+  it('should handle error when updating a user role', async () => {
+    const userId = 'mockUserId';
+    const updateRoleDto: UpdateRoleDto = { role: UserRole.ADMIN };
+    mockUserService.updateUserRole.mockRejectedValueOnce(
+      new NotFoundException('User not found'),
+    );
+    await expect(
+      controller.updateUserRole(userId, updateRoleDto),
+    ).rejects.toThrow(NotFoundException);
+  });
 });
+

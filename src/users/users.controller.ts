@@ -60,13 +60,14 @@ export class UsersController {
   async getUsers() {
     return await this.usersService.getUsers();
   }
-  @Patch(':id/add-journey')
-  async addJourneyToUser(
+
+  @Patch(':id/add-point')
+  async addPointToUser(
     @Param('id') id: string,
-    @Body() body: { journeyId: string },
+    @Body() body: { pointId: string },
   ) {
     try {
-      return await this.usersService.addJourneyToUser(id, body.journeyId);
+      return await this.usersService.addPointToUser(id, body.pointId);
     } catch (error) {
       throw error;
     }
@@ -88,6 +89,22 @@ export class UsersController {
     @Param('journeyId') journeyId: string,
   ) {
     return this.usersService.unsubscribeJourney(userId, journeyId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':userId/complete/:trailId')
+  async completeTrail(
+    @Param('userId') userId: string,
+    @Param('trailId') trailId: string,
+  ) {
+    return this.usersService.completeTrail(userId, trailId);
+  }
+
+  @Get(':userId/completedTrails')
+  async getCompletedTrails(
+    @Param('userId') userId: string,
+  ): Promise<Types.ObjectId[]> {
+    return await this.usersService.getCompletedTrails(userId);
   }
 
   @Get('/:id')
