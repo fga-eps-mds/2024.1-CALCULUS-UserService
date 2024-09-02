@@ -131,23 +131,23 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-  
+
     const objectId = new Types.ObjectId(trailId);
-    
-    const isTrailCompleted = user.completedTrails.some(
-      (completedTrailId) => completedTrailId.equals(objectId),
+
+    const isTrailCompleted = user.completedTrails.some((completedTrailId) =>
+      completedTrailId.equals(objectId),
     );
-  
+
     if (isTrailCompleted) {
       throw new ConflictException(
         `User already completed trail with ID ${trailId}`,
       );
     }
-  
+
     user.completedTrails.push(objectId);
-  
+
     return user.save();
-  }  
+  }
 
   async deleteUserById(_id: string): Promise<void> {
     const result = await this.userModel.deleteOne({ _id }).exec();

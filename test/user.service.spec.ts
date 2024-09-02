@@ -22,8 +22,8 @@ describe('UsersService', () => {
     verificationToken: 'mockToken',
     isVerified: false,
     subscribedJourneys: [new Types.ObjectId(), new Types.ObjectId()],
-    completedTrails: [new Types.ObjectId(), new Types.ObjectId()], 
-    save: jest.fn().mockResolvedValue(this), 
+    completedTrails: [new Types.ObjectId(), new Types.ObjectId()],
+    save: jest.fn().mockResolvedValue(this),
   };
 
   const mockUserList = [
@@ -268,62 +268,66 @@ describe('UsersService', () => {
       jest.spyOn(model, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockUser),
       } as any);
-  
+
       const result = await service.getCompletedTrails('mockId');
       expect(result).toEqual(mockUser.completedTrails);
     });
-  
+
     it('should throw NotFoundException if user is not found when getting completed trails', async () => {
       jest.spyOn(model, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
-  
+
       await expect(service.getCompletedTrails('invalidId')).rejects.toThrow(
         NotFoundException,
       );
     });
-  
+
     it('should mark a trail as completed for a user', async () => {
       const trailId = new Types.ObjectId().toHexString();
-  
+
       jest.spyOn(model, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockUser),
       } as any);
-  
+
       const userWithCompletedTrail = {
         ...mockUser,
         completedTrails: [new Types.ObjectId(trailId)],
       };
-  
-      jest.spyOn(mockUser, 'save').mockResolvedValue(userWithCompletedTrail as any);
-  
+
+      jest
+        .spyOn(mockUser, 'save')
+        .mockResolvedValue(userWithCompletedTrail as any);
+
       const result = await service.completeTrail('mockId', trailId);
-      expect(result.completedTrails).toContainEqual(new Types.ObjectId(trailId));
+      expect(result.completedTrails).toContainEqual(
+        new Types.ObjectId(trailId),
+      );
       expect(mockUser.save).toHaveBeenCalled();
     });
-  
+
     it('should throw NotFoundException if user is not found when marking a trail as completed', async () => {
       jest.spyOn(model, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
-  
+
       await expect(
         service.completeTrail('invalidId', new Types.ObjectId().toHexString()),
       ).rejects.toThrow(NotFoundException);
     });
-  
+
     it('should throw ConflictException if trail is already completed by the user', async () => {
       const trailId = new Types.ObjectId().toHexString();
-  
+
       const userWithCompletedTrail = {
         ...mockUser,
         completedTrails: [new Types.ObjectId(trailId)],
       };
-  
+
       jest.spyOn(model, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(userWithCompletedTrail),
       } as any);
-  
+
       await expect(service.completeTrail('mockId', trailId)).rejects.toThrow(
         ConflictException,
       );

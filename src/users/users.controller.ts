@@ -82,7 +82,6 @@ export class UsersController {
     return this.usersService.subscribeJourney(userId, journeyId);
   }
 
-
   @UseGuards(JwtAuthGuard)
   @Delete(':userId/unsubscribe/:journeyId')
   async unsubscribeJourney(
@@ -91,7 +90,7 @@ export class UsersController {
   ) {
     return this.usersService.unsubscribeJourney(userId, journeyId);
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @Post(':userId/complete/:trailId')
   async completeTrail(
