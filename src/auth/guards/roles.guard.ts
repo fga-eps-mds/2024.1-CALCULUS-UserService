@@ -1,9 +1,5 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-} from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from 'src/users/dtos/user-role.enum';
@@ -30,7 +26,7 @@ export class RolesGuard implements CanActivate {
     const user = this.jwtService.decode(token);
 
     if (!user.role.includes(UserRole.ADMIN)) {
-      throw new ForbiddenException('Access denied');
+      return false;
     }
     return true;
   }
