@@ -150,4 +150,3 @@ describe('UsersController', () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
-
