@@ -1,15 +1,37 @@
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ExecutionContext } from '@nestjs/common';
 import { UserRole } from 'src/users/dtos/user-role.enum';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 describe('RolesGuard', () => {
   let rolesGuard: RolesGuard;
+  let jwtService: JwtService;
   let reflector: Reflector;
 
-  beforeEach(() => {
-    reflector = new Reflector();
-    rolesGuard = new RolesGuard(reflector);
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        RolesGuard,
+        {
+          provide: Reflector,
+          useValue: {
+            get: jest.fn(),
+          },
+        },
+        {
+          provide: JwtService,
+          useValue: {
+            decode: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    rolesGuard = module.get<RolesGuard>(RolesGuard);
+    reflector = module.get<Reflector>(Reflector);
+    jwtService = module.get<JwtService>(JwtService);
   });
 
   it('should be defined', () => {
@@ -17,55 +39,44 @@ describe('RolesGuard', () => {
   });
 
   describe('canActivate', () => {
-    it('should return true if no roles are defined', () => {
+    it('should return true if no roles are required', () => {
+      const context = createMockExecutionContext({});
       jest.spyOn(reflector, 'get').mockReturnValue(undefined);
 
-      const context = {
-        switchToHttp: jest.fn().mockReturnValue({
-          getRequest: jest
-            .fn()
-            .mockReturnValue({ user: { role: UserRole.ALUNO } }),
-        }),
-        getHandler: jest.fn().mockReturnValue(null),
-      } as unknown as ExecutionContext;
-
-      const result = rolesGuard.canActivate(context);
-
-      expect(result).toBe(true);
+      expect(rolesGuard.canActivate(context)).toBe(true);
     });
 
-    it('should return true if user role is in required roles', () => {
-      const requiredRoles = [UserRole.ADMIN];
-      jest.spyOn(reflector, 'get').mockReturnValue(requiredRoles);
+    it('should return false if the user does not have the required role', () => {
+      const context = createMockExecutionContext({
+        headers: { authorization: 'Bearer validToken' },
+      });
+      jest.spyOn(reflector, 'get').mockReturnValue([UserRole.ADMIN]);
+      jest
+        .spyOn(jwtService, 'decode')
+        .mockReturnValue({ role: [UserRole.ALUNO] });
 
-      const context = {
-        switchToHttp: jest.fn().mockReturnValue({
-          getRequest: jest
-            .fn()
-            .mockReturnValue({ user: { role: UserRole.ADMIN } }),
-        }),
-        getHandler: jest.fn().mockReturnValue(null),
-      } as unknown as ExecutionContext;
-
-      const result = rolesGuard.canActivate(context);
-
-      expect(result).toBe(true);
+      expect(rolesGuard.canActivate(context)).toBe(false);
     });
 
-    it('should throw ForbiddenException if user role is not in required roles', () => {
-      const requiredRoles = [UserRole.ADMIN];
-      jest.spyOn(reflector, 'get').mockReturnValue(requiredRoles);
+    it('should return true if the user has the required role', () => {
+      const context = createMockExecutionContext({
+        headers: { authorization: 'Bearer validToken' },
+      });
+      jest.spyOn(reflector, 'get').mockReturnValue([UserRole.ADMIN]);
+      jest
+        .spyOn(jwtService, 'decode')
+        .mockReturnValue({ role: [UserRole.ADMIN] });
 
-      const context = {
-        switchToHttp: jest.fn().mockReturnValue({
-          getRequest: jest
-            .fn()
-            .mockReturnValue({ user: { role: UserRole.ALUNO } }),
-        }),
-        getHandler: jest.fn().mockReturnValue(null),
-      } as unknown as ExecutionContext;
-
-      expect(() => rolesGuard.canActivate(context)).toThrow(ForbiddenException);
+      expect(rolesGuard.canActivate(context)).toBe(true);
     });
   });
 });
+
+function createMockExecutionContext(request: any) {
+  return {
+    switchToHttp: () => ({
+      getRequest: () => request,
+    }),
+    getHandler: () => jest.fn(), 
+  } as unknown as ExecutionContext;
+}

@@ -16,7 +16,11 @@ export const UserSchema = new mongoose.Schema(
       enum: Object.values(UserRole),
       default: UserRole.ALUNO,
     },
-    journeys: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Journey' }],
+    points: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Point' }],
+    subscribedJourneys: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Journey' },
+    ],
+    completedTrails: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Trail' }],
   },
   { timestamps: true, collection: 'users' },
 );
